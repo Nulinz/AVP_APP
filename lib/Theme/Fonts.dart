@@ -7,9 +7,10 @@ class AppTextStyles {
   // NotoSans Font Styles (Arial alternative)
   static TextStyle heading = _notoSansStyle(24.r, FontWeight.bold, textcolor);
   static TextStyle subHeading =
-      _notoSansStyle(21.r, FontWeight.w600, textcolor);
-  static TextStyle body = _notoSansStyle(17.r, FontWeight.normal, textcolor);
-  static TextStyle small = _notoSansStyle(14.r, FontWeight.normal, Colors.grey);
+      _notoSansStyle(21.r, FontWeight.w600, kPrimaryColor);
+  static TextStyle body =
+      _notoSansStyle(17.r, FontWeight.normal, kPrimaryColor);
+  static TextStyle small = _notoSansStyle(14.r, FontWeight.normal, whiteColor);
   static TextStyle error = _notoSansStyle(15.r, FontWeight.bold, Colors.red);
   static TextStyle success =
       _notoSansStyle(15.r, FontWeight.bold, Colors.green);
@@ -25,7 +26,7 @@ class AppTextStyles {
   static TextStyle bodyLuckiest =
       _luckiestGuyStyle(17.r, FontWeight.normal, textcolor);
   static TextStyle smallLuckiest =
-      _luckiestGuyStyle(14.r, FontWeight.normal, Colors.grey);
+      _luckiestGuyStyle(14.r, FontWeight.normal, Colors.black);
   static TextStyle errorLuckiest =
       _luckiestGuyStyle(15.r, FontWeight.bold, Colors.red);
   static TextStyle successLuckiest =
@@ -46,7 +47,7 @@ class AppTextStyles {
   // Helper method for LuckiestGuy font
   static TextStyle _luckiestGuyStyle(
       double size, FontWeight weight, Color color) {
-    return GoogleFonts.luckiestGuy(
+    return GoogleFonts.notoSans(
       textStyle: TextStyle(
         fontSize: size.r,
         fontWeight: weight,

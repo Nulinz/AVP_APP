@@ -1,16 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+import 'package:sakthiexports/Controller/KeyAnswerController.dart';
 import 'package:sakthiexports/View/util/linecontainer.dart';
 import 'Sidenavbar.dart';
 
 class Keyanswer extends StatefulWidget {
-  const Keyanswer({super.key});
+  final int examId;
+
+  const Keyanswer({
+    super.key,
+    required this.examId,
+  });
 
   @override
   State<Keyanswer> createState() => _KeyanswerState();
 }
 
 class _KeyanswerState extends State<Keyanswer> {
+  final keyanswerController = Get.put(Keyanswercontroller());
+
+  @override
+  void initState() {
+    super.initState();
+
+    keyanswerController.fetchAnswers(examId: widget.examId);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,35 +68,48 @@ class _KeyanswerState extends State<Keyanswer> {
               style: TextStyle(fontSize: 16.r, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 12.r),
-            Expanded(
-              child: ListView.builder(
-                itemCount: questionData.length,
-                itemBuilder: (context, index) {
-                  final q = questionData[index];
-                  final isCorrect = q['answer'] == q['userAnswer'];
-                  return Padding(
-                    padding: EdgeInsets.only(bottom: 12.r),
-                    child: linecontainer(
-                      Padding(
-                        padding: EdgeInsets.all(16.r),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildRow("S.NO", "${index + 1}", 0),
-                            _buildRow("QUESTION", q['question'] ?? '', 1),
-                            _buildRow("ANSWER", q['answer'] ?? '', 2,
-                                valueColor: Colors.green),
-                            _buildRow("USER ANSWER", q['userAnswer'] ?? '', 3,
-                                valueColor:
-                                    isCorrect ? Colors.green : Colors.red),
-                          ],
+            Obx(() {
+              if (keyanswerController.isLoading.value) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (keyanswerController.answers.isEmpty) {
+                return const Center(child: Text("No answers found"));
+              }
+
+              return Expanded(
+                child: ListView.builder(
+                  itemCount: keyanswerController.answers.length,
+                  itemBuilder: (context, index) {
+                    final q = keyanswerController.answers[index];
+                    final correctAnswer = q['correct_answer'] ?? '';
+                    final userAnswer = q['answer_status'] ?? '';
+                    final isCorrect = correctAnswer == userAnswer;
+
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 12.r),
+                      child: linecontainer(
+                        Padding(
+                          padding: EdgeInsets.all(16.r),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildRow("S.NO", "${index + 1}", 0),
+                              _buildRow("QUESTION", q['question'] ?? '', 1),
+                              _buildRow("ANSWER", correctAnswer, 2,
+                                  valueColor: Colors.green),
+                              _buildRow("USER ANSWER", userAnswer, 3,
+                                  valueColor:
+                                      isCorrect ? Colors.green : Colors.red),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                },
-              ),
-            ),
+                    );
+                  },
+                ),
+              );
+            }),
           ],
         ),
       ),
@@ -125,21 +154,3 @@ class _KeyanswerState extends State<Keyanswer> {
     );
   }
 }
-
-final List<Map<String, String>> questionData = [
-  {
-    "question": "இதனை மிகச் சேர்த்தால் அருசியும், நெஞ்சிற் கபமும் விளையும்",
-    "answer": "புதிய தேன்",
-    "userAnswer": "பழைய தேன்",
-  },
-  {
-    "question": "ஷயம், அதிகாலம் முதலிய பிணிகளை நீக்குவது",
-    "answer": "மரப்பொந்து தேன்",
-    "userAnswer": "மரப்பொந்து தேன்",
-  },
-  {
-    "question": "தேன் எத்தனை நாடிகளில் சிறந்ததாகும்",
-    "answer": "12",
-    "userAnswer": "12",
-  },
-];

@@ -13,7 +13,7 @@ class AppTheme {
       primaryColor: kPrimaryColor,
       scaffoldBackgroundColor: whiteColor,
       iconTheme: const IconThemeData(color: blackColor),
-      textTheme: GoogleFonts.interTextTheme(Theme.of(context).textTheme),
+      textTheme: GoogleFonts.notoSansTextTheme(Theme.of(context).textTheme),
       textSelectionTheme: TextSelectionThemeData(
           cursorColor: primaryMaterialColor,
           selectionColor: primaryMaterialColor[100],

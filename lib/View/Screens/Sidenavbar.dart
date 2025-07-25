@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:sakthiexports/Theme/Colors.dart';
-
+import 'package:sakthiexports/Theme/Fonts.dart';
 import 'package:sakthiexports/View/LoginRegister/Loginpage.dart';
-
 import '../../Controller/Sidenavbarcontroller.dart';
 import 'Downlodedvideo.dart';
 import 'Homepage.dart';
 import 'Profile.dart';
 import 'Q&Akeys.dart';
 import 'Videosample.dart';
-
 
 class SideNavbarDrawer extends StatelessWidget {
   SideNavbarDrawer({super.key});
@@ -36,34 +33,24 @@ class SideNavbarDrawer extends StatelessWidget {
                   radius: 40.r,
                   backgroundImage: controller.employeeImg.value.isNotEmpty
                       ? CachedNetworkImageProvider(controller.employeeImg.value)
-                      : const AssetImage("assets/images/ProfileAvatar.jpg")
+                      : const NetworkImage(
+                              'https://cdn3.iconfinder.com/data/icons/web-design-and-development-2-6/512/87-1024.png')
                           as ImageProvider,
                 ),
                 SizedBox(height: 12.r),
                 Text(
                   "Dr. NAVEEN BALAJI V",
-                  style: GoogleFonts.roboto(
-                    color: Colors.white,
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: AppTextStyles.subHeading.withColor(whiteColor),
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 6.r),
                 Text(
                   "AVP2025009581",
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14.sp,
-                  ),
+                  style: AppTextStyles.body.withColor(whiteColor),
                 ),
                 Text(
                   "PG NEET 009 Batch 2024 - 2026",
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13.sp,
-                  ),
-                  textAlign: TextAlign.center,
+                  style: AppTextStyles.body.withColor(whiteColor),
                 ),
                 SizedBox(height: 30.r),
                 _item(Icons.dashboard, "Dashboard", () {
@@ -104,13 +91,6 @@ class SideNavbarDrawer extends StatelessWidget {
         dense: true,
         onTap: tap,
         leading: Icon(ico, color: Colors.white, size: 22.r),
-        title: Text(
-          title,
-          style: GoogleFonts.roboto(
-            fontSize: 16.r,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
+        title: Text(title, style: AppTextStyles.body.withColor(whiteColor)),
       );
 }

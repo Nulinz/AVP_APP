@@ -3,195 +3,195 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:math';
 import 'package:get/get.dart';
 
-class DragTargetsRow extends StatefulWidget {
-  final int draggedTask;
+// class DragTargetsRow extends StatefulWidget {
+//   final int draggedTask;
 
-  final Function(String task) onDropInProgress;
-  final Function(String task) onDropOnHold;
-  final Function(String task) onDropCompleted;
+//   final Function(String task) onDropInProgress;
+//   final Function(String task) onDropOnHold;
+//   final Function(String task) onDropCompleted;
 
-  const DragTargetsRow({
-    super.key,
-    required this.draggedTask,
-    required this.onDropInProgress,
-    required this.onDropOnHold,
-    required this.onDropCompleted,
-  });
+//   const DragTargetsRow({
+//     super.key,
+//     required this.draggedTask,
+//     required this.onDropInProgress,
+//     required this.onDropOnHold,
+//     required this.onDropCompleted,
+//   });
 
-  @override
-  State<DragTargetsRow> createState() => _DragTargetsRowState();
-}
+//   @override
+//   State<DragTargetsRow> createState() => _DragTargetsRowState();
+// }
 
-class _DragTargetsRowState extends State<DragTargetsRow>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _fadeAnimation;
+// class _DragTargetsRowState extends State<DragTargetsRow>
+//     with SingleTickerProviderStateMixin {
+//   late AnimationController _controller;
+//   late Animation<double> _scaleAnimation;
+//   late Animation<double> _fadeAnimation;
 
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration:
-          const Duration(milliseconds: 600), // Longer duration for smoothness
-      vsync: this,
-    );
+//   @override
+//   void initState() {
+//     super.initState();
+//     _controller = AnimationController(
+//       duration:
+//           const Duration(milliseconds: 600), // Longer duration for smoothness
+//       vsync: this,
+//     );
 
-    _scaleAnimation = Tween<double>(begin: 0.2, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.elasticOut,
-      ),
-    );
+//     _scaleAnimation = Tween<double>(begin: 0.2, end: 1.0).animate(
+//       CurvedAnimation(
+//         parent: _controller,
+//         curve: Curves.elasticOut,
+//       ),
+//     );
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.2, 1.0,
-            curve: Curves.easeOut), // Adds delay to fade-in
-      ),
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.2, 1.0,
-            curve: Curves.easeOut), // Adds delay to fade-in
-      ),
-    );
-  }
+//     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+//       CurvedAnimation(
+//         parent: _controller,
+//         curve: const Interval(0.2, 1.0,
+//             curve: Curves.easeOut), // Adds delay to fade-in
+//       ),
+//     );
+//     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+//       CurvedAnimation(
+//         parent: _controller,
+//         curve: const Interval(0.2, 1.0,
+//             curve: Curves.easeOut), // Adds delay to fade-in
+//       ),
+//     );
+//   }
 
-  @override
-  void didUpdateWidget(covariant DragTargetsRow oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.draggedTask != 0) {
-      _controller.forward(
-          from: 0); // Restart animation when `draggedTask` changes
-    }
-  }
+//   @override
+//   void didUpdateWidget(covariant DragTargetsRow oldWidget) {
+//     super.didUpdateWidget(oldWidget);
+//     if (widget.draggedTask != 0) {
+//       _controller.forward(
+//           from: 0); // Restart animation when `draggedTask` changes
+//     }
+//   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+//   @override
+//   void dispose() {
+//     _controller.dispose();
+//     super.dispose();
+//   }
 
-  @override
-  Widget build(BuildContext context) {
-    return widget.draggedTask == 0
-        ? const SizedBox()
-        : FadeTransition(
-            opacity: _fadeAnimation,
-            child: ScaleTransition(
-              scale: _scaleAnimation,
-              child: Column(
-                children: [
-                  Container(
-                    color: Colors.white.withOpacity(.1),
-                    width: MediaQuery.sizeOf(context).width,
-                    height: 270.r,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        CustomPaint(
-                          size: Size(MediaQuery.sizeOf(context).width, 300),
-                          painter: ArcPainter(),
-                        ),
-                        Positioned(
-                          bottom: 20.r,
-                          child: Container(
-                            width: 100.r,
-                            height: 100.r,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [Color(0xFFA18EFF), Color(0xFF836FFF)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black26,
-                                  blurRadius: 10.r,
-                                  offset: Offset(0, 5.r),
-                                ),
-                              ],
-                            ),
-                            child: Center(
-                              child: Text(
-                                'Drag & Drop',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14.r,
-                                  fontWeight: FontWeight.bold,
-                                  shadows: [
-                                    Shadow(
-                                      offset: Offset(1.r, 1.r),
-                                      blurRadius: 3.r,
-                                      color: Colors.black26,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Center(
-                          child: ArcWidgets(
-                            radius: Get.width / 2.2 + 5,
-                            widgets: [
-                              // DragTarget<String>(
-                              //   onAccept: widget.onDropTodo,
-                              //   builder:
-                              //       (context, candidateData, rejectedData) {
-                              //     return DragOption(
-                              //       title: 'Todo',
-                              //       isHighlighted: candidateData.isNotEmpty,
-                              //     );
-                              //   },
-                              // ),
-                              DragTarget<String>(
-                                onAccept: widget.onDropInProgress,
-                                builder:
-                                    (context, candidateData, rejectedData) {
-                                  return DragOption(
-                                    title: 'In Progress',
-                                    isHighlighted: candidateData.isNotEmpty,
-                                  );
-                                },
-                              ),
-                              DragTarget<String>(
-                                onAccept: widget.onDropOnHold,
-                                builder:
-                                    (context, candidateData, rejectedData) {
-                                  return DragOption(
-                                    title: 'On Hold',
-                                    isHighlighted: candidateData.isNotEmpty,
-                                  );
-                                },
-                              ),
-                              DragTarget<String>(
-                                onAccept: widget.onDropCompleted,
-                                builder:
-                                    (context, candidateData, rejectedData) {
-                                  return DragOption(
-                                    title: 'Completed',
-                                    isHighlighted: candidateData.isNotEmpty,
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return widget.draggedTask == 0
+//         ? const SizedBox()
+//         : FadeTransition(
+//             opacity: _fadeAnimation,
+//             child: ScaleTransition(
+//               scale: _scaleAnimation,
+//               child: Column(
+//                 children: [
+//                   Container(
+//                     color: Colors.white.withOpacity(.1),
+//                     width: MediaQuery.sizeOf(context).width,
+//                     height: 270.r,
+//                     child: Stack(
+//                       alignment: Alignment.center,
+//                       children: [
+//                         CustomPaint(
+//                           size: Size(MediaQuery.sizeOf(context).width, 300),
+//                           painter: ArcPainter(),
+//                         ),
+//                         Positioned(
+//                           bottom: 20.r,
+//                           child: Container(
+//                             width: 100.r,
+//                             height: 100.r,
+//                             decoration: BoxDecoration(
+//                               shape: BoxShape.circle,
+//                               gradient: const LinearGradient(
+//                                 colors: [Color(0xFFA18EFF), Color(0xFF836FFF)],
+//                                 begin: Alignment.topLeft,
+//                                 end: Alignment.bottomRight,
+//                               ),
+//                               boxShadow: [
+//                                 BoxShadow(
+//                                   color: Colors.black26,
+//                                   blurRadius: 10.r,
+//                                   offset: Offset(0, 5.r),
+//                                 ),
+//                               ],
+//                             ),
+//                             child: Center(
+//                               child: Text(
+//                                 'Drag & Drop',
+//                                 textAlign: TextAlign.center,
+//                                 style: TextStyle(
+//                                   color: Colors.white,
+//                                   fontSize: 14.r,
+//                                   fontWeight: FontWeight.bold,
+//                                   shadows: [
+//                                     Shadow(
+//                                       offset: Offset(1.r, 1.r),
+//                                       blurRadius: 3.r,
+//                                       color: Colors.black26,
+//                                     ),
+//                                   ],
+//                                 ),
+//                               ),
+//                             ),
+//                           ),
+//                         ),
+//                         Center(
+//                           child: ArcWidgets(
+//                             radius: Get.width / 2.2 + 5,
+//                             widgets: [
+//                               // DragTarget<String>(
+//                               //   onAccept: widget.onDropTodo,
+//                               //   builder:
+//                               //       (context, candidateData, rejectedData) {
+//                               //     return DragOption(
+//                               //       title: 'Todo',
+//                               //       isHighlighted: candidateData.isNotEmpty,
+//                               //     );
+//                               //   },
+//                               // ),
+//                               DragTarget<String>(
+//                                 onAcceptWithDetails: widget.onDropInProgress,
+//                                 builder:
+//                                     (context, candidateData, rejectedData) {
+//                                   return DragOption(
+//                                     title: 'In Progress',
+//                                     isHighlighted: candidateData.isNotEmpty,
+//                                   );
+//                                 },
+//                               ),
+//                               DragTarget<String>(
+//                                 onAcceptWithDetails: widget.onDropOnHold,
+//                                 builder:
+//                                     (context, candidateData, rejectedData) {
+//                                   return DragOption(
+//                                     title: 'On Hold',
+//                                     isHighlighted: candidateData.isNotEmpty,
+//                                   );
+//                                 },
+//                               ),
+//                               DragTarget<String>(
+//                                 onAcceptWithDetails: widget.onDropCompleted,
+//                                 builder:
+//                                     (context, candidateData, rejectedData) {
+//                                   return DragOption(
+//                                     title: 'Completed',
+//                                     isHighlighted: candidateData.isNotEmpty,
+//                                   );
+//                                 },
+//                               ),
+//                             ],
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           );
+//   }
+// }
 
 class DragOption extends StatelessWidget {
   final String title;
@@ -242,7 +242,7 @@ class ArcWidgets extends StatelessWidget {
   final double separatorLength; // Length of the separator
   final Color separatorColor; // Color of the separator
 
-  ArcWidgets({
+  const ArcWidgets({super.key, 
     required this.widgets,
     required this.radius,
     this.separatorThickness = 2.0,

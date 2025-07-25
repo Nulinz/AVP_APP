@@ -11,14 +11,14 @@ class SearchDropdownInput extends StatefulWidget {
   final ValueChanged<String?> onChanged;
 
   const SearchDropdownInput({
-    Key? key,
+    super.key,
     required this.hintText,
     required this.validatorText,
     this.dropdownValue,
     required this.dropdownList,
     required this.onChanged,
     this.validationRequired = true,
-  }) : super(key: key);
+  });
 
   @override
   _SearchDropdownInputState createState() => _SearchDropdownInputState();
@@ -62,7 +62,7 @@ class _SearchDropdownInputState extends State<SearchDropdownInput> {
               child: Container(
                 height: Get.height * 0.6,
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                 ),
@@ -73,14 +73,14 @@ class _SearchDropdownInputState extends State<SearchDropdownInput> {
                       controller: searchController,
                       decoration: InputDecoration(
                         hintText: "Search...",
-                        prefixIcon: Icon(Icons.search, color: Colors.grey),
+                        prefixIcon: const Icon(Icons.search, color: Colors.grey),
                         filled: true,
                         fillColor: Colors.grey[100],
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide.none,
                         ),
-                        contentPadding: EdgeInsets.symmetric(vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                       onChanged: (query) {
                         setStateModal(() {
@@ -114,7 +114,7 @@ class _SearchDropdownInputState extends State<SearchDropdownInput> {
                                 );
                               },
                             )
-                          : Center(
+                          : const Center(
                               child: Text(
                                 "No results found",
                                 style: TextStyle(color: Colors.grey),

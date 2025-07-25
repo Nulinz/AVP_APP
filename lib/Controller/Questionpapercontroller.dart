@@ -1,44 +1,34 @@
-// import 'package:get/get.dart';
+import 'package:get/get.dart';
+import '../Backendservice/BackendService.dart';
+import '../Backendservice/connectionService.dart';
 
-// import '../Backendservice/BackendService.dart';
-// import '../Backendservice/connectionService.dart';
+class Questionpapercontroller extends GetxController {
+  var isLoading = false.obs;
+  var questions = <Map<String, dynamic>>[].obs;
 
-// class QuestionPaperController extends GetxController {
-//   final int empId;
-//   final int curriculumId;
+  Future<void> fetchQuestions({required int examId}) async {
+    try {
+      isLoading.value = true;
 
-//   var isLoading = false.obs;
-//   var questionList = <Map<String, dynamic>>[].obs;
+      final response = await Backendservice.function(
+        {
+          "exam_id": examId,
+          "button_type": "questions",
+        },
+        ConnectionService.questions,
+        "POST",
+      );
 
-//   QuestionPaperController(this.empId, this.curriculumId);
-
-//   @override
-//   void onInit() {
-//     super.onInit();
-//     fetchQuestionPaper();
-//   }
-
-//   Future<void> fetchQuestionPaper() async {
-//     try {
-//       isLoading.value = true;
-
-//       final response = await Backendservice.function(
-//         {},
-//         "${ConnectionService.questionPaper}?emp_id=$empId&curriculum_id=$curriculumId",
-//         "GET",
-//       );
-
-//       if (response['success'] == true) {
-//         final data = response['data'] ?? [];
-//         questionList.value = List<Map<String, dynamic>>.from(data);
-//       } else {
-//         questionList.clear();
-//       }
-//     } catch (e) {
-//       print("Error fetching question paper: $e");
-//       questionList.clear();
-//     } finally {
-//       isLoading.value = false;
-//     }
-//   }
-// }
+      if (response['status'] == 'success') {
+        questions.value = List<Map<String, dynamic>>.from(response['data']);
+      } else {
+        questions.clear();
+      }
+    } catch (e) {
+      print("Error fetching questions: $e");
+      questions.clear();
+    } finally {
+      isLoading.value = false;
+    }
+  }
+}

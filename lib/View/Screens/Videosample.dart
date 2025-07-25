@@ -1,13 +1,18 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:sakthiexports/Theme/Colors.dart';
+import 'package:sakthiexports/Theme/Fonts.dart';
 import 'package:sakthiexports/View/util/linecontainer.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:dio/dio.dart' as dio;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
+import '../../Controller/Videocontroller.dart';
 import 'VideoPlayerfullscreen.dart';
 
 class SampleVideoListPlayer extends StatefulWidget {
@@ -18,15 +23,36 @@ class SampleVideoListPlayer extends StatefulWidget {
 }
 
 class _SampleVideoListPlayerState extends State<SampleVideoListPlayer> {
-  final List<String> videoUrls = [
-    'https://samplelib.com/lib/preview/mp4/sample-30s.mp4',
-    'https://samplelib.com/lib/preview/mp4/sample-5s.mp4',
-    'https://samplelib.com/lib/preview/mp4/sample-10s.mp4',
-    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
-    'https://samplelib.com/lib/preview/mp4/sample-5s.mp4'
-  ];
+  final videoController = Get.put(VideoController());
 
   final Set<int> decryptedVideoIndices = {};
+
+  late Future<void> _initialLoad;
+
+  @override
+  void initState() {
+    super.initState();
+    _initialLoad = _initControllerAndDownloads();
+  }
+
+  Future<void> _initControllerAndDownloads() async {
+    await videoController.loadProfileFromPrefs(); // fetches list
+    await _loadDownloadedVideos(); // loads local state
+  }
+
+  Future<void> _loadDownloadedVideos() async {
+    final dir = await getApplicationDocumentsDirectory();
+
+    for (int i = 0; i < videoController.videoList.length; i++) {
+      final file = File('${dir.path}/video_$i.aes');
+      if (await file.exists()) {
+        decryptedVideoIndices.add(i);
+      }
+    }
+
+    debugPrint("Restored download state: $decryptedVideoIndices");
+    setState(() {});
+  }
 
   Future<String> _getRemoteFileSize(String url) async {
     try {
@@ -55,7 +81,6 @@ class _SampleVideoListPlayerState extends State<SampleVideoListPlayer> {
       final tempVideoPath = '${tempDir.path}/temp_video_$index.mp4';
       final tempVideoFile = File(tempVideoPath);
 
-      // Download only if file doesn't exist
       if (!await tempVideoFile.exists()) {
         final response = await dio.Dio().get<List<int>>(
           url,
@@ -133,7 +158,7 @@ class _SampleVideoListPlayerState extends State<SampleVideoListPlayer> {
                       );
 
                       if (shouldCancel == true) {
-                        Navigator.of(dialogContext).pop(); // closes main dialog
+                        Navigator.of(dialogContext).pop();
                       }
                     },
                   ),
@@ -166,8 +191,8 @@ class _SampleVideoListPlayerState extends State<SampleVideoListPlayer> {
     );
   }
 
-  Future<bool> downloadAndEncryptVideo(
-      BuildContext context, String url, String filename, int index) async {
+  Future<bool> downloadAndEncryptVideo(BuildContext context, String url,
+      String filename, int index, title, description) async {
     try {
       ValueNotifier<double> progress = ValueNotifier(0.0);
       ValueNotifier<int> totalBytes = ValueNotifier(0);
@@ -183,9 +208,7 @@ class _SampleVideoListPlayerState extends State<SampleVideoListPlayer> {
           }
         },
       );
-
       Navigator.pop(context);
-
       if (response.data == null) throw Exception("No data received");
 
       final key = encrypt.Key.fromUtf8('32charslongencryptionkey12345678');
@@ -199,9 +222,23 @@ class _SampleVideoListPlayerState extends State<SampleVideoListPlayer> {
       await file.writeAsBytes(encrypted.bytes);
 
       debugPrint("Downloaded and encrypted: ${file.path}");
+
+      final prefs = await SharedPreferences.getInstance();
+      final title = videoController.videoList[index]['title'] ?? '';
+      final description = videoController.videoList[index]['description'] ?? '';
+
+      await prefs.setString(
+        filename,
+        jsonEncode({'title': title, 'description': description}),
+      );
+
+      debugPrint("Metadata stored for $filename");
+
       setState(() {
         decryptedVideoIndices.add(index);
       });
+      await Future.delayed(const Duration(milliseconds: 300));
+      await _loadDownloadedVideos();
 
       return true;
     } catch (e) {
@@ -213,6 +250,12 @@ class _SampleVideoListPlayerState extends State<SampleVideoListPlayer> {
 
   Future<File?> decryptToTempFile(String filename) async {
     try {
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File('${tempDir.path}/$filename.mp4');
+      if (await tempFile.exists()) {
+        return tempFile;
+      }
+
       final dir = await getApplicationDocumentsDirectory();
       final encFile = File('${dir.path}/$filename.aes');
       if (!await encFile.exists()) return null;
@@ -225,8 +268,6 @@ class _SampleVideoListPlayerState extends State<SampleVideoListPlayer> {
 
       final decrypted =
           encrypter.decryptBytes(encrypt.Encrypted(encryptedBytes), iv: iv);
-      final tempDir = await getTemporaryDirectory();
-      final tempFile = File('${tempDir.path}/$filename.mp4');
       await tempFile.writeAsBytes(decrypted);
       return tempFile;
     } catch (e) {
@@ -245,19 +286,16 @@ class _SampleVideoListPlayerState extends State<SampleVideoListPlayer> {
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),
     );
-
     try {
       if (await encryptedFile.exists()) {
         final decryptedFile = await decryptToTempFile(filename);
         Navigator.pop(context);
-
         if (decryptedFile == null) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Failed to decrypt video')),
           );
           return;
         }
-
         final exists = await decryptedFile.exists();
         final size = await decryptedFile.length();
         debugPrint("Decrypted file path: ${decryptedFile.path}");
@@ -303,140 +341,315 @@ class _SampleVideoListPlayerState extends State<SampleVideoListPlayer> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Course Videos"),
+        title: Text(
+          "Course Videos",
+          style: AppTextStyles.heading,
+        ),
       ),
-      body: ListView.builder(
-        itemCount: videoUrls.length,
-        itemBuilder: (context, index) {
-          final url = videoUrls[index];
-          final filename = 'video_$index';
-          final isDownloaded = decryptedVideoIndices.contains(index);
+      body: Obx(() {
+        if (videoController.isLoading.value) {
+          return _buildShimmerList();
+        }
 
-          return Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.r),
-            child: linecontainer(
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  GestureDetector(
-                    onTap: () => _openFullScreen(context, url, index),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: AspectRatio(
-                            aspectRatio: 16 / 9,
-                            child: isDownloaded
-                                ? Container(
-                                    color: Colors.black12,
-                                    child: const Center(
-                                      child: Icon(Icons.check_circle,
-                                          size: 48, color: Colors.green),
-                                    ),
-                                  )
-                                : FutureBuilder<String?>(
-                                    future: _getVideoThumbnail(url, index),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState ==
-                                              ConnectionState.done &&
-                                          snapshot.hasData &&
-                                          snapshot.data != null) {
-                                        return Image.file(
-                                          File(snapshot.data!),
-                                          fit: BoxFit.cover,
-                                        );
-                                      } else {
-                                        return Container(
-                                          color: Colors.grey[300],
-                                          child: const Center(
-                                            child: CircularProgressIndicator(),
-                                          ),
-                                        );
-                                      }
-                                    },
-                                  ),
-                          ),
-                        ),
-                        const Icon(Icons.play_circle_fill,
-                            size: 64, color: Colors.white70),
-                      ],
-                    ),
+        if (!videoController.isFetchCompleted.value) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+
+        if (videoController.videoList.isEmpty) {
+          return RefreshIndicator(
+            onRefresh: videoController.fetchVideoList,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(height: 350),
+                Center(
+                  child: Text(
+                    "No Course Video Found",
+                    style: AppTextStyles.subHeading.withColor(blackColor),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                    child: Text(
-                      "Video ${index + 1}",
-                      style: TextStyle(
-                        fontSize: 18.r,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.r),
-                    child: FutureBuilder<String>(
-                      future: _getRemoteFileSize(url),
-                      builder: (context, snapshot) {
-                        return Text(
-                          snapshot.hasData
-                              ? "Size: ${snapshot.data}"
-                              : "Size: Loading...",
-                          style: TextStyle(
-                            fontSize: 14.r,
-                            color: Colors.grey.shade700,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  SizedBox(height: 8.r),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.r),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        SizedBox(
-                          width: Get.width / 4.5,
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.teal,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8.r)),
-                            ),
-                            onPressed: () =>
-                                _openFullScreen(context, url, index),
-                            icon: const Icon(Icons.play_arrow),
-                            label: const Text("Play"),
-                          ),
-                        ),
-                        SizedBox(width: 8.r),
-                        IconButton(
-                          tooltip: "Download",
-                          icon:
-                              const Icon(Icons.download, color: kPrimaryColor),
-                          onPressed: () async {
-                            final success = await downloadAndEncryptVideo(
-                                context, url, filename, index);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(success
-                                    ? 'Download complete!'
-                                    : 'Download failed.'),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 12.r),
-                ],
-              ),
+                ),
+              ],
             ),
           );
-        },
-      ),
+        }
+
+        return RefreshIndicator(
+          onRefresh: () async {
+            await videoController.fetchVideoList();
+          },
+          child: Obx(
+            () => ListView.builder(
+              itemCount: videoController.videoList.length,
+              itemBuilder: (context, index) {
+                final video = videoController.videoList[index];
+                final url = video['url'];
+                final title = video['title'];
+                final filename = 'video_$index';
+                final isDownloaded = decryptedVideoIndices.contains(index);
+                final description =
+                    video['description'] ?? 'No description available';
+                final expiryDate = video['expiry_date'] ?? 'N/A';
+
+                return Padding(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.r),
+                  child: linecontainer(
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            if (isDownloaded) {
+                              _openFullScreen(context, url, index);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text(
+                                        "Please download the video first.")),
+                              );
+                            }
+                          },
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: AspectRatio(
+                                  aspectRatio: 16 / 9,
+                                  child: isDownloaded
+                                      ? Container(
+                                          color: Colors.black12,
+                                          child: const Center(
+                                            child: Icon(Icons.check_circle,
+                                                size: 48, color: Colors.green),
+                                          ),
+                                        )
+                                      : FutureBuilder<String?>(
+                                          future:
+                                              _getVideoThumbnail(url, index),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.connectionState ==
+                                                    ConnectionState.done &&
+                                                snapshot.hasData &&
+                                                snapshot.data != null) {
+                                              return Image.file(
+                                                File(snapshot.data!),
+                                                fit: BoxFit.cover,
+                                              );
+                                            } else {
+                                              return Container(
+                                                color: Colors.grey[300],
+                                                child: const Center(
+                                                  child:
+                                                      CircularProgressIndicator(),
+                                                ),
+                                              );
+                                            }
+                                          },
+                                        ),
+                                ),
+                              ),
+                              const Icon(Icons.play_circle_fill,
+                                  size: 64, color: Colors.white70),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      title,
+                                      maxLines: 2,
+                                      style: AppTextStyles.subHeading
+                                          .withColor(blackColor),
+                                    ),
+                                    SizedBox(height: 4.r),
+                                    Text(
+                                      description,
+                                      maxLines: 2,
+                                      style: AppTextStyles.body
+                                          .withColor(blackColor),
+                                    ),
+                                    SizedBox(height: 2.r),
+                                    FutureBuilder<String>(
+                                      future: _getRemoteFileSize(url),
+                                      builder: (context, snapshot) {
+                                        return Text(
+                                          snapshot.hasData
+                                              ? "Size: ${snapshot.data}"
+                                              : "Size: Loading...",
+                                          style: AppTextStyles.small
+                                              .withColor(greyColor),
+                                        );
+                                      },
+                                    ),
+                                    SizedBox(height: 2.r),
+                                    Text(
+                                      "Expires on: $expiryDate",
+                                      style: AppTextStyles.small
+                                          .withColor(Colors.red),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                children: [
+                                  if (isDownloaded) ...[
+                                    SizedBox(
+                                      width: Get.width / 4.5,
+                                      child: ElevatedButton.icon(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.teal,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8.r),
+                                          ),
+                                        ),
+                                        onPressed: () => _openFullScreen(
+                                            context, url, index),
+                                        icon: const Icon(Icons.play_arrow),
+                                        label: const Text("Play"),
+                                      ),
+                                    ),
+                                    SizedBox(height: 4.r),
+                                  ],
+                                  IconButton(
+                                    tooltip: "Download",
+                                    icon: const Icon(Icons.download,
+                                        color: kPrimaryColor),
+                                    onPressed: () async {
+                                      final success =
+                                          await downloadAndEncryptVideo(
+                                              context,
+                                              url,
+                                              filename,
+                                              index,
+                                              title,
+                                              description);
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            success
+                                                ? 'Download complete!'
+                                                : 'Download failed.',
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 12.r),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      }),
     );
   }
+}
+
+Widget _buildShimmerList() {
+  return ListView.builder(
+    itemCount: 4,
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    itemBuilder: (context, index) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: linecontainer(
+          Shimmer.fromColors(
+            baseColor: Colors.grey.shade300,
+            highlightColor: Colors.grey.shade100,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                Container(
+                  height: 16,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                Container(
+                  height: 14,
+                  width: Get.width * 0.7,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                Row(
+                  children: [
+                    Container(
+                      height: 12,
+                      width: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Container(
+                      height: 12,
+                      width: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // Button shimmer (Download / Play)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Container(
+                    height: 36,
+                    width: 100,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }

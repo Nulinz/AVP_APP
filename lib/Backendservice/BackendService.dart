@@ -136,6 +136,54 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Backendservice {
+  static Future<Map<String, dynamic>> Login(
+    Map<String, dynamic> data,
+    String url,
+    String method,
+  ) async {
+    try {
+      print("📤 URL: $url");
+      print("📤 Method: $method");
+      print("📤 Sending: ${jsonEncode(data)}");
+
+      final response = await Dio().request(
+        url,
+        data: data,
+        options: Options(
+          method: method,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        ),
+      );
+
+      print("✅ Status Code: ${response.statusCode}");
+      print("🟢 Response: ${response.data}");
+
+      dynamic jsonData = response.data;
+
+      if (jsonData is String) {
+        try {
+          jsonData = json.decode(jsonData);
+        } catch (e) {
+          throw Exception("Invalid JSON response");
+        }
+      }
+
+      if (jsonData is Map<String, dynamic>) {
+        return jsonData;
+      } else {
+        throw Exception("Unexpected response format");
+      }
+    } on DioException catch (e) {
+      print("🔴 Dio Error: ${e.response?.statusCode} ${e.response?.data}");
+      throw Exception("Something went wrong during login: ${e.response?.data}");
+    } catch (e) {
+      print("❌ Unknown Error: $e");
+      throw Exception("Unexpected error occurred");
+    }
+  }
+
   // Upload files with optional token
   static Future<Map<String, dynamic>> UploadFiles(
       Map<String, dynamic> login, String url, String method) async {
@@ -208,77 +256,50 @@ class Backendservice {
   static Future<Map<String, dynamic>> function(
     Map<String, dynamic> data,
     String url,
-    String method, {
-    bool isFormData = false,
-  }) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
+    String method,
+  ) async {
+    final dio = Dio();
 
-    if (isFormData) {
-      var request = http.MultipartRequest(method, Uri.parse(url));
+    final response = await dio.request(
+      url,
+      data: method == 'GET' ? null : FormData.fromMap(data),
+      options: Options(
+        method: method,
+        headers: {
+          'Content-Type': method == 'GET'
+              ? 'application/x-www-form-urlencoded'
+              : 'multipart/form-data',
+        },
+      ),
+    );
 
-      request.headers.addAll({
-        'Accept': 'application/json',
-        'Content-Type': 'multipart/form-data',
-        'Authorization': 'Bearer $token',
-      });
+    dynamic jsonData = response.data;
 
-      data.forEach((key, value) {
-        request.fields[key] = value.toString();
-      });
-
-      var streamedResponse = await request.send();
-      var response = await http.Response.fromStream(streamedResponse);
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        return {
-          'success': false,
-          'message': 'Error: ${response.statusCode}',
-          'body': response.body,
-        };
-      }
-    } else {
+    if (jsonData is String) {
       try {
-        final response = await Dio().request(
-          url,
-          data: data,
-          options: Options(
-            method: method,
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-            validateStatus: (status) => status! < 500, 
-          ),
-        );
-
-        dynamic jsonData = response.data;
-
-        if (jsonData is String) {
-          try {
-            jsonData = json.decode(jsonData);
-          } catch (e) {
-            throw Exception("Invalid JSON response");
-          }
-        }
-
-        if (jsonData is Map<String, dynamic>) {
-          return jsonData;
-        } else {
-          throw Exception("Unexpected response format");
-        }
-      } on DioError catch (e) {
-        print("❌ Dio error: ${e.response?.statusCode} - ${e.response?.data}");
-
-        if (e.response?.statusCode == 401) {
-          throw Exception(
-              "Unauthorized (401): Token may be missing or expired");
-        }
-
-        throw Exception("Network or server error: ${e.message}");
+        jsonData = json.decode(jsonData);
+      } catch (e) {
+        throw Exception("Invalid JSON response");
       }
+    }
+
+    if (jsonData is Map<String, dynamic>) {
+      return jsonData;
+    } else {
+      throw Exception("Unexpected response format");
+    }
+  }
+}
+Future<void> printSharedPreferences() async {
+  final prefs = await SharedPreferences.getInstance();
+  final keys = prefs.getKeys();
+
+  if (keys.isEmpty) {
+    print("SharedPreferences is empty.");
+  } else {
+    print('Shared Prefrences Key & Stored values');
+    for (String key in keys) {
+      print('$key: ${prefs.get(key)}');
     }
   }
 }

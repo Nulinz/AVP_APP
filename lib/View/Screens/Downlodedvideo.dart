@@ -2,12 +2,33 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
+import 'package:sakthiexports/Theme/Colors.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
-
-import '../util/linecontainer.dart';
+import 'package:sakthiexports/Controller/Videocontroller.dart';
+import 'package:sakthiexports/Theme/Fonts.dart';
 import 'VideoPlayerfullscreen.dart';
+import '../util/linecontainer.dart';
+
+const String _aesKey = '32charslongencryptionkey12345678';
+const String _aesIV = '1234567890abcdef';
+
+List<int> aesDecrypt(List<int> encryptedIntList) {
+  final encryptedBytes = Uint8List.fromList(encryptedIntList);
+
+  final key = encrypt.Key.fromUtf8(_aesKey);
+  final iv = encrypt.IV.fromUtf8(_aesIV);
+  final encrypter =
+      encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.cbc));
+
+  final decrypted =
+      encrypter.decryptBytes(encrypt.Encrypted(encryptedBytes), iv: iv);
+  return decrypted;
+}
 
 class DownloadedVideoList extends StatefulWidget {
   const DownloadedVideoList({super.key});
@@ -17,8 +38,11 @@ class DownloadedVideoList extends StatefulWidget {
 }
 
 class _DownloadedVideoListState extends State<DownloadedVideoList> {
+  final videoController = Get.put(VideoController());
   List<FileSystemEntity> videoFiles = [];
   Map<String, String?> thumbnailCache = {};
+  Map<String, Map<String, String>> downloadedVideoMetadata = {};
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -27,12 +51,48 @@ class _DownloadedVideoListState extends State<DownloadedVideoList> {
   }
 
   Future<void> _loadDownloadedVideos() async {
+    setState(() {
+      isLoading = true;
+    });
+    await Future.delayed(const Duration(seconds: 3));
     final dir = await getApplicationDocumentsDirectory();
     final files = dir.listSync();
     final aesFiles = files.where((f) => f.path.endsWith('.aes')).toList();
+
+    final prefs = await SharedPreferences.getInstance();
+    final metadataMap = <String, Map<String, String>>{};
+
+    for (var file in aesFiles) {
+      final filename = file.path.split('/').last.replaceAll('.aes', '');
+      final title = prefs.getString('$filename.title') ?? filename;
+      final description = prefs.getString('$filename.description') ??
+          'No description available';
+      metadataMap[filename] = {
+        'title': title,
+        'description': description,
+      };
+    }
+
     setState(() {
       videoFiles = aesFiles;
+      downloadedVideoMetadata = metadataMap;
+      isLoading = false;
     });
+  }
+
+  Future<File> _decryptFile(File encryptedFile) async {
+    final encryptedBytes = await encryptedFile.readAsBytes();
+
+    // compute only works with List<int>, not Uint8List
+    final decryptedBytes = await compute(aesDecrypt, encryptedBytes.toList());
+
+    final tempDir = await getTemporaryDirectory();
+    final filename =
+        encryptedFile.uri.pathSegments.last.replaceAll('.aes', '.mp4');
+    final tempFile = File('${tempDir.path}/$filename');
+
+    await tempFile.writeAsBytes(Uint8List.fromList(decryptedBytes));
+    return tempFile;
   }
 
   Future<String?> _generateThumbnail(File encryptedFile) async {
@@ -42,48 +102,29 @@ class _DownloadedVideoListState extends State<DownloadedVideoList> {
     }
 
     try {
-      final decryptedFile =
-          await decryptVideoInIsolate({'path': encryptedFile.path});
+      final decryptedFile = await _decryptFile(encryptedFile);
 
-      final thumbnailPath = await VideoThumbnail.thumbnailFile(
+      final thumbnailDir = await getApplicationDocumentsDirectory();
+      final thumbnailPath = '${thumbnailDir.path}/${pathKey.hashCode}.jpg';
+
+      if (File(thumbnailPath).existsSync()) {
+        thumbnailCache[pathKey] = thumbnailPath;
+        return thumbnailPath;
+      }
+
+      final generated = await VideoThumbnail.thumbnailFile(
         video: decryptedFile.path,
+        thumbnailPath: thumbnailPath,
         imageFormat: ImageFormat.JPEG,
         maxHeight: 120,
         quality: 75,
       );
 
-      thumbnailCache[pathKey] = thumbnailPath;
-      return thumbnailPath;
+      thumbnailCache[pathKey] = generated;
+      return generated;
     } catch (e) {
       debugPrint('Thumbnail generation failed: $e');
       return null;
-    }
-  }
-
-  Future<File> decryptToTempFile(File encryptedFile) async {
-    try {
-      final encryptedBytes = await encryptedFile.readAsBytes();
-
-      final key = encrypt.Key.fromUtf8('32charslongencryptionkey12345678');
-      final iv = encrypt.IV.fromUtf8('1234567890abcdef');
-
-      final encrypter =
-          encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.cbc));
-      final decrypted =
-          encrypter.decryptBytes(encrypt.Encrypted(encryptedBytes), iv: iv);
-
-      final tempDir = await getTemporaryDirectory();
-      final filename =
-          encryptedFile.uri.pathSegments.last.replaceAll('.aes', '.mp4');
-      final tempFile = File('${tempDir.path}/$filename');
-      await tempFile.writeAsBytes(decrypted);
-
-      return tempFile;
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ Failed to decrypt video: $e')),
-      );
-      rethrow;
     }
   }
 
@@ -95,16 +136,23 @@ class _DownloadedVideoListState extends State<DownloadedVideoList> {
     );
 
     try {
-      final decryptedFile = await decryptToTempFile(encryptedFile);
+      final decryptedFile = await _decryptFile(encryptedFile);
+      if (!mounted) return;
       Navigator.pop(context);
+
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => VideoPlayerFullScreen(videoUrl: decryptedFile.path),
         ),
       );
-    } catch (_) {
-      Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to decrypt/play video: $e')),
+        );
+      }
     }
   }
 
@@ -118,7 +166,7 @@ class _DownloadedVideoListState extends State<DownloadedVideoList> {
             'Are you sure you want to delete "${file.path.split('/').last}"?',
           ),
           actions: [
-            TextButton(
+            ElevatedButton(
               onPressed: () => Navigator.pop(context),
               child: const Text('Cancel'),
             ),
@@ -127,9 +175,11 @@ class _DownloadedVideoListState extends State<DownloadedVideoList> {
                 Navigator.pop(context);
                 await file.delete();
                 _loadDownloadedVideos();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Video deleted')),
-                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Video deleted')),
+                  );
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.redAccent,
@@ -145,117 +195,213 @@ class _DownloadedVideoListState extends State<DownloadedVideoList> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Downloaded Videos')),
-      body: videoFiles.isEmpty
-          ? const Center(child: Text('No downloaded videos found.'))
-          : ListView.builder(
-              padding: const EdgeInsets.fromLTRB(10, 10, 10, 30),
-              itemCount: videoFiles.length,
-              itemBuilder: (context, index) {
-                final file = videoFiles[index];
-                final filename =
-                    file.path.split('/').last.replaceAll('.aes', '');
+      appBar: AppBar(
+        title: Text('Downloaded Videos', style: AppTextStyles.heading),
+      ),
+      body: isLoading
+          ? _buildShimmerList()
+          : videoFiles.isEmpty
+              ? Center(
+                  child: Text('No downloaded videos found.',
+                      style: AppTextStyles.subHeading.withColor(blackColor)))
+              : ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 30),
+                  itemCount: videoFiles.length,
+                  itemBuilder: (context, index) {
+                    final file = videoFiles[index];
+                    final filename = file.path.split('/').last;
 
-                return Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8.r),
-                  child: linecontainer(
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        GestureDetector(
-                          onTap: () => _playDecryptedVideo(File(file.path)),
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              AspectRatio(
-                                aspectRatio: 16 / 9,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(10.r),
-                                  child: FutureBuilder<String?>(
-                                    future: _generateThumbnail(File(file.path)),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState ==
-                                              ConnectionState.done &&
-                                          snapshot.hasData &&
-                                          snapshot.data != null) {
-                                        return Image.file(
-                                          File(snapshot.data!),
-                                          fit: BoxFit.cover,
-                                        );
-                                      } else {
-                                        return Container(
-                                          color: Colors.grey[300],
-                                          child: const Center(
-                                              child:
-                                                  CircularProgressIndicator()),
-                                        );
-                                      }
-                                    },
+                    final videoIndex = int.tryParse(
+                        filename.replaceAll(RegExp(r'[^0-9]'), ''));
+
+                    final video = (videoIndex != null &&
+                            videoIndex >= 0 &&
+                            videoIndex < videoController.videoList.length)
+                        ? videoController.videoList[videoIndex]
+                        : null;
+
+                    final title = video?['title'] ?? 'NA';
+                    final description =
+                        video?['description'] ?? 'No description available';
+
+                    return Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8.r),
+                      child: linecontainer(
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            GestureDetector(
+                              onTap: () => _playDecryptedVideo(File(file.path)),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  AspectRatio(
+                                    aspectRatio: 16 / 9,
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(10.r),
+                                      child: FutureBuilder<String?>(
+                                        future:
+                                            _generateThumbnail(File(file.path)),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.connectionState ==
+                                                  ConnectionState.done &&
+                                              snapshot.hasData &&
+                                              snapshot.data != null) {
+                                            return Image.file(
+                                              File(snapshot.data!),
+                                              fit: BoxFit.cover,
+                                            );
+                                          } else {
+                                            return Container(
+                                              color: Colors.grey[300],
+                                              child: const Center(
+                                                  child:
+                                                      CircularProgressIndicator()),
+                                            );
+                                          }
+                                        },
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                  Icon(Icons.play_circle_fill,
+                                      size: 64.r, color: Colors.white70),
+                                ],
                               ),
-                              Icon(
-                                Icons.play_circle_fill,
-                                size: 64.r,
-                                color: Colors.white70,
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 8.r),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8.r),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  filename,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 16.r,
-                                    fontWeight: FontWeight.bold,
+                            ),
+                            SizedBox(height: 8.r),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 8.r),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 16.r,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
+                                  SizedBox(height: 4.r),
+                                  Text(
+                                    description,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 14.r,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      IconButton(
+                                        onPressed: () =>
+                                            _confirmDelete(File(file.path)),
+                                        icon: const Icon(Icons.delete,
+                                            color: Colors.redAccent),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                              IconButton(
-                                onPressed: () =>
-                                    _confirmDelete(File(file.path)),
-                                icon: const Icon(Icons.delete,
-                                    color: Colors.redAccent),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+                      ),
+                    );
+                  },
+                ),
     );
   }
+}
 
-  Future<File> decryptVideoInIsolate(Map<String, dynamic> args) async {
-    final encryptedPath = args['path'] as String;
-    final encryptedBytes = await File(encryptedPath).readAsBytes();
+Widget _buildShimmerList() {
+  return ListView.builder(
+    itemCount: 4,
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    itemBuilder: (context, index) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: linecontainer(
+          Shimmer.fromColors(
+            baseColor: Colors.grey.shade300,
+            highlightColor: Colors.grey.shade100,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
 
-    final key = encrypt.Key.fromUtf8('32charslongencryptionkey12345678');
-    final iv = encrypt.IV.fromUtf8('1234567890abcdef');
+                Container(
+                  height: 16,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(height: 8),
 
-    final encrypter =
-        encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.cbc));
-    final decryptedBytes =
-        encrypter.decryptBytes(encrypt.Encrypted(encryptedBytes), iv: iv);
+                Container(
+                  height: 14,
+                  width: Get.width * 0.7,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(height: 8),
 
-    final tempDir = await getTemporaryDirectory();
-    final filename = encryptedPath.split('/').last.replaceAll('.aes', '.mp4');
-    final tempPath = '${tempDir.path}/$filename';
+                Row(
+                  children: [
+                    Container(
+                      height: 12,
+                      width: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Container(
+                      height: 12,
+                      width: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
 
-    final decryptedFile = File(tempPath);
-    await decryptedFile.writeAsBytes(decryptedBytes);
-
-    return decryptedFile;
-  }
+                // Button shimmer (Download / Play)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Container(
+                    height: 36,
+                    width: 100,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }

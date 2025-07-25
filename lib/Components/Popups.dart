@@ -42,7 +42,7 @@ DetailsFillupPopup(
                 style: const ButtonStyle(
                     backgroundColor: WidgetStatePropertyAll(kPrimaryColor)),
                 onPressed: onPressed,
-                child: Text(primaryButton, style: TextStyle(color: blackColor)),
+                child: Text(primaryButton, style: const TextStyle(color: blackColor)),
               ),
             )
           ],
@@ -299,7 +299,7 @@ SigninLoader(BuildContext context) {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
+                  SizedBox(
                     width: Get.width,
                     height: Get.height / 6,
                     child: Image.asset(

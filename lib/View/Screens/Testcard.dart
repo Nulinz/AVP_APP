@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:sakthiexports/Theme/Colors.dart';
 import 'package:sakthiexports/View/util/linecontainer.dart';
-
+import '../../Theme/Fonts.dart';
 import 'Sidenavbar.dart';
 
 class Testcard extends StatefulWidget {
@@ -48,7 +48,7 @@ class _TestcardState extends State<Testcard> {
 
   Map<int, String> selectedOptions = {};
   Timer? _timer;
-  int _remainingSeconds = 15 * 60;
+  int _remainingSeconds = 2 * 60;
   bool isSubmitted = false;
 
   @override
@@ -57,9 +57,10 @@ class _TestcardState extends State<Testcard> {
     attendedQuestions = List.generate(questions.length, (i) => '${i + 1}');
     startTimer();
   }
+  
 
   void startTimer() {
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_remainingSeconds == 0) {
         handleSubmit();
       } else {
@@ -70,7 +71,7 @@ class _TestcardState extends State<Testcard> {
     });
   }
 
-  void handleSubmit() {
+  void handleSubmit({String? message}) {
     if (isSubmitted) return;
     _timer?.cancel();
     setState(() {
@@ -78,10 +79,11 @@ class _TestcardState extends State<Testcard> {
     });
     Get.snackbar(
       "Test Submitted",
-      "Your answers have been submitted.",
+      message ?? "Your answers have been submitted.",
       backgroundColor: Colors.green,
       colorText: Colors.white,
       snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 3),
     );
   }
 
@@ -89,6 +91,38 @@ class _TestcardState extends State<Testcard> {
     final minutes = (seconds ~/ 60).toString().padLeft(2, '0');
     final secs = (seconds % 60).toString().padLeft(2, '0');
     return "$minutes:$secs";
+  }
+
+  Future<bool?> showExitConfirmationDialog(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Exit Test?"),
+        content: const Text(
+            "Oops! You haven't submitted the test yet. If you leave, it will be auto-submitted. Do you still want to go back?"),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.grey[300],
+              foregroundColor: Colors.black,
+            ),
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              handleSubmit(message: "Test auto-submitted!!");
+              Navigator.of(context).pop(true);
+            },
+            child: const Text("Yes, Exit"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -99,172 +133,211 @@ class _TestcardState extends State<Testcard> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 221, 215, 244),
-      drawer: Drawer(
-        width: Get.width * 0.8,
-        child: SideNavbarDrawer(),
-      ),
-      appBar: AppBar(
-        leading: Padding(
-          padding: EdgeInsets.all(8.r),
-          child: SizedBox(
-            width: 50.r,
-            height: 50.r,
-            child: Image.asset('assets/images/logo.png'),
-          ),
+    return WillPopScope(
+      onWillPop: () async {
+        if (!isSubmitted) {
+          final shouldLeave = await showExitConfirmationDialog(context);
+          return shouldLeave ?? false;
+        }
+        return true;
+      },
+      child: Scaffold(
+        backgroundColor: const Color.fromARGB(255, 221, 215, 244),
+        drawer: Drawer(
+          width: Get.width * 0.8,
+          child: SideNavbarDrawer(),
         ),
-        title: Text(
-          "AVP Siddha Academy",
-          style: TextStyle(fontSize: 18.r, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        actions: [
-          Builder(
-            builder: (context) => IconButton(
-              icon: const Icon(Icons.menu, color: Colors.black),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
+        appBar: AppBar(
+          leading: Padding(
+            padding: EdgeInsets.all(8.r),
+            child: SizedBox(
+              width: 50.r,
+              height: 50.r,
+              child: Image.asset('assets/images/logo.png'),
             ),
           ),
-        ],
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(8.r),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Text('Exam: '),
-                const Text('Text Exam'),
-                const Spacer(),
-                const Text('Close In: '),
-                Text(formatTime(_remainingSeconds)),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Card(
-              elevation: 3,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-              color: whiteColor,
-              child: SizedBox(
-                width: double.infinity,
-                height: 100,
-                child: Padding(
-                  padding: EdgeInsets.all(16.r),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Attended Questions:',
-                        style: TextStyle(
-                            fontSize: 16.r, fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 10.r),
-                      Wrap(
-                        spacing: 10.r,
-                        runSpacing: 10.r,
-                        children:
-                            List.generate(attendedQuestions.length, (index) {
-                          final isAnswered = selectedOptions.containsKey(index);
-                          return Container(
-                            width: 24.r,
-                            height: 24.r,
-                            decoration: BoxDecoration(
-                              color: isAnswered ? Colors.green : Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              attendedQuestions[index],
-                              style: TextStyle(
-                                  color: Colors.white, fontSize: 12.r),
-                            ),
-                          );
-                        }),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 10.r),
-            Expanded(
-              child: linecontainer(
-                Padding(
-                  padding: EdgeInsets.all(8.r),
-                  child: ListView.builder(
-                    itemCount: questions.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == questions.length) {
-                        return Center(
-                          child: ElevatedButton(
-                            onPressed: isSubmitted ? null : handleSubmit,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: kPrimaryColor,
-                              foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 25.r, vertical: 16.r),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10.r),
-                              ),
-                            ),
-                            child: const Text("Submit Test"),
-                          ),
-                        );
-                      }
-                      final questionText = questions[index]['question'];
-                      final options =
-                          questions[index]['options'] as List<String>;
-                      return Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              questionText,
-                              style: const TextStyle(
-                                  fontSize: 14, fontWeight: FontWeight.bold),
-                            ),
-                            SizedBox(height: 6.r),
-                            ...options.map((option) {
-                              final isSelected =
-                                  selectedOptions[index] == option;
-                              return RadioListTile<String>(
-                                toggleable: true,
-                                key:
-                                    ValueKey('q${index}_${option}_$isSelected'),
-                                title: Text(option),
-                                value: option,
-                                groupValue: selectedOptions[index],
-                                onChanged: isSubmitted
-                                    ? null
-                                    : (value) {
-                                        setState(() {
-                                          if (value == null) {
-                                            selectedOptions.remove(index);
-                                          } else {
-                                            selectedOptions[index] = value;
-                                          }
-                                        });
-                                      },
-                                contentPadding: EdgeInsets.zero,
-                                dense: true,
-                              );
-                            }),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
+          title: Text("AVP Siddha Academy", style: AppTextStyles.heading),
+          centerTitle: true,
+          backgroundColor: Colors.white,
+          actions: [
+            Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.menu, color: Colors.black),
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();
+                },
               ),
             ),
           ],
+        ),
+        body: Padding(
+          padding: EdgeInsets.all(8.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Text('Exam: '),
+                  const Text('Text Exam'),
+                  const Spacer(),
+                  const Text('Close In: '),
+                  Text(formatTime(_remainingSeconds)),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Card(
+                elevation: 3,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                color: whiteColor,
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 100,
+                  child: Padding(
+                    padding: EdgeInsets.all(16.r),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Attended Questions:',
+                            style: AppTextStyles.heading.withColor(blackColor)),
+                        SizedBox(height: 10.r),
+                        Wrap(
+                          spacing: 10.r,
+                          runSpacing: 10.r,
+                          children:
+                              List.generate(attendedQuestions.length, (index) {
+                            final isAnswered =
+                                selectedOptions.containsKey(index);
+                            return Container(
+                              width: 24.r,
+                              height: 24.r,
+                              decoration: BoxDecoration(
+                                color: isAnswered ? Colors.green : Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(attendedQuestions[index],
+                                  style: AppTextStyles.small
+                                      .withColor(whiteColor)),
+                            );
+                          }),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 10.r),
+              Expanded(
+                child: linecontainer(
+                  Padding(
+                    padding: EdgeInsets.all(8.r),
+                    child: ListView.builder(
+                      itemCount: questions.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == questions.length) {
+                          return Center(
+                            child: ElevatedButton(
+                              onPressed: isSubmitted
+                                  ? null
+                                  : () async {
+                                      final shouldSubmit =
+                                          await showDialog<bool>(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: const Text("Submit Test?"),
+                                          content: const Text(
+                                              "Are you sure you want to submit the test? You cannot make changes afterward."),
+                                          actions: [
+                                            ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    Colors.grey[300],
+                                                foregroundColor: Colors.black,
+                                              ),
+                                              onPressed: () =>
+                                                  Navigator.of(context)
+                                                      .pop(false),
+                                              child: const Text("Cancel"),
+                                            ),
+                                            ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.red,
+                                                foregroundColor: Colors.white,
+                                              ),
+                                              onPressed: () =>
+                                                  Navigator.of(context)
+                                                      .pop(true),
+                                              child: const Text("Yes, Submit"),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+
+                                      if (shouldSubmit == true) {
+                                        handleSubmit();
+                                      }
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: kPrimaryColor,
+                                foregroundColor: Colors.white,
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 25.r, vertical: 16.r),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10.r),
+                                ),
+                              ),
+                              child: const Text("Submit Test"),
+                            ),
+                          );
+                        }
+                        final questionText = questions[index]['question'];
+                        final options =
+                            questions[index]['options'] as List<String>;
+                        return Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(questionText,
+                                  style: AppTextStyles.subHeading
+                                      .withColor(blackColor)),
+                              SizedBox(height: 6.r),
+                              ...options.map((option) {
+                                final isSelected =
+                                    selectedOptions[index] == option;
+                                return RadioListTile<String>(
+                                  toggleable: true,
+                                  key: ValueKey(
+                                      'q${index}_${option}_$isSelected'),
+                                  title: Text(option),
+                                  value: option,
+                                  groupValue: selectedOptions[index],
+                                  onChanged: isSubmitted
+                                      ? null
+                                      : (value) {
+                                          setState(() {
+                                            if (value == null) {
+                                              selectedOptions.remove(index);
+                                            } else {
+                                              selectedOptions[index] = value;
+                                            }
+                                          });
+                                        },
+                                  contentPadding: EdgeInsets.zero,
+                                  dense: true,
+                                );
+                              }),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

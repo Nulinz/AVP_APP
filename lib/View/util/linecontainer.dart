@@ -1,15 +1,16 @@
 import "package:flutter/material.dart";
 import "package:flutter_screenutil/flutter_screenutil.dart";
 import "package:google_fonts/google_fonts.dart";
+import "package:shimmer/shimmer.dart";
 
 import "../../Theme/Colors.dart";
 
 linecontainer(Widget child) {
   return Container(
     decoration: ShapeDecoration(
-        color: Color.fromRGBO(254, 254, 254, 1),
+        color: const Color.fromRGBO(254, 254, 254, 1),
         shape: RoundedRectangleBorder(
-            side: BorderSide(width: 0.5, color: greyColor),
+            side: const BorderSide(width: 0.5, color: greyColor),
             borderRadius: BorderRadius.circular(12.r))),
     child: child,
   );
@@ -43,7 +44,7 @@ linecontainerwithshadow(Widget child) {
           BoxShadow(
             color: blackColor.withOpacity(.11),
             blurRadius: .11,
-            offset: Offset(0, .5),
+            offset: const Offset(0, .5),
             spreadRadius: .11,
           )
         ],
@@ -53,3 +54,5 @@ linecontainerwithshadow(Widget child) {
     child: child,
   );
 }
+
+

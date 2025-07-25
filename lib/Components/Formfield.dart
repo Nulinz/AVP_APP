@@ -234,9 +234,13 @@ class NumberInput extends StatelessWidget {
 }
 
 class LRTextInput extends StatelessWidget {
-  final String LabelText, HintText, ValidatorText;
+  final String LabelText;
   final TextEditingController Controller;
+  final String HintText;
+  final String ValidatorText;
   final IconData IconName;
+  final bool obscureText;
+  final Widget? suffixIcon;
   final bool readOnly;
   final bool validationRequired;
 
@@ -247,6 +251,8 @@ class LRTextInput extends StatelessWidget {
     required this.HintText,
     required this.ValidatorText,
     required this.IconName,
+    this.obscureText = false,
+    this.suffixIcon,
     this.readOnly = false,
     this.validationRequired = true,
   });
@@ -266,10 +272,11 @@ class LRTextInput extends StatelessWidget {
         ),
         const SizedBox(height: 5),
         TextFormField(
+          controller: Controller,
+          obscureText: obscureText,
+          readOnly: readOnly,
           keyboardType: TextInputType.text,
           cursorColor: kPrimaryColor,
-          controller: Controller,
-          readOnly: readOnly,
           style: TextStyle(fontSize: Get.width / 26),
           decoration: InputDecoration(
             prefixIcon: Icon(
@@ -277,6 +284,7 @@ class LRTextInput extends StatelessWidget {
               color: blackColor,
               size: Get.width / 24,
             ),
+            suffixIcon: suffixIcon,
             hintText: HintText,
             hintStyle: TextStyle(fontSize: Get.width / 32, color: greyColor80),
             border: const UnderlineInputBorder(),
@@ -619,7 +627,7 @@ class DropdownInput extends StatefulWidget {
   final ValueChanged<String?> onChanged;
 
   const DropdownInput({
-    Key? key,
+    super.key,
     required this.LabelText,
     required this.hintText,
     required this.validatorText,
@@ -627,7 +635,7 @@ class DropdownInput extends StatefulWidget {
     required this.dropdownList, // Expecting a non-null list
     required this.onChanged,
     this.validationRequired = true,
-  }) : super(key: key);
+  });
 
   @override
   _DropdownInputState createState() => _DropdownInputState();
@@ -741,7 +749,7 @@ class RadioOptionDropdown extends StatefulWidget {
   final Function(String) onSelectionChanged;
   final bool validationRequired;
 
-  const RadioOptionDropdown({
+  const RadioOptionDropdown({super.key, 
     required this.LabelText,
     required this.hintText,
     required this.validatorText,
@@ -1266,288 +1274,284 @@ class _DateInputState extends State<DateInput> {
   }
 }
 
-class CustomMultiSelectDropdown extends FormField<List<String>> {
-  CustomMultiSelectDropdown({
-    required List<String> items,
-    required List<String> selectedItems,
-    List<String>? initialvalue,
-    required Function(List<String>) onSelectionChanged,
-    required String LabelText,
-    FormFieldSetter<List<String>>? onSaved,
-    bool validationRequired = true,
-    AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
-    required Key key,
-  }) : super(
-          onSaved: onSaved,
-          validator: (selectedItems) {
-            if (!validationRequired) {
-              return null;
-            }
-            // In-built validation for null or empty selection
-            if ((selectedItems == null || selectedItems.isEmpty) &&
-                (initialvalue == null || initialvalue.isEmpty)) {
-              return 'Please select at least one option';
-            }
-            return null; // No validation error
-          },
-          initialValue:
-              initialvalue ?? selectedItems, // Ensure initial value is set
-          autovalidateMode: autovalidateMode,
-          builder: (FormFieldState<List<String>> state) {
-            return CtmMultiSelectDropdown(
-              items: items,
-              selectedItems: state.value ??
-                  [], // Use the current state value or empty list
-              onSelectionChanged: (newSelectedItems) {
-                state.didChange(newSelectedItems); // Update FormField state
-                onSelectionChanged(newSelectedItems); // Notify parent widget
-              },
-              errorText: state.hasError ? state.errorText : null,
-              LabelText: LabelText,
-              validationRequired: validationRequired,
-              key: key, initialValue: initialvalue ?? [],
-            );
-          },
-        );
-}
+// class CustomMultiSelectDropdown extends FormField<List<String>> {
+//   CustomMultiSelectDropdown({
+//     super.key,
+//     required List<String> items,
+//     required List<String> selectedItems,
+//     List<String>? initialvalue,
+//     required Function(List<String>) onSelectionChanged,
+//     required String LabelText,
+//     super.onSaved,
+//     bool validationRequired = true,
+//     AutovalidateMode super.autovalidateMode = AutovalidateMode.disabled,
+//   }) : super(
+//           validator: (selectedItems) {
+//             if (!validationRequired) {
+//               return null;
+//             }
+//             if ((selectedItems == null || selectedItems.isEmpty) &&
+//                 (initialvalue == null || initialvalue.isEmpty)) {
+//               return 'Please select at least one option';
+//             }
+//             return null;
+//           },
+//           initialValue: initialvalue ?? selectedItems,
+//           builder: (FormFieldState<List<String>> state) {
+//             return CtmMultiSelectDropdown(
+//               items: items,
+//               selectedItems: state.value ?? [],
+//               onSelectionChanged: (newSelectedItems) {
+//                 state.didChange(newSelectedItems);
+//                 onSelectionChanged(newSelectedItems);
+//               },
+//               errorText: state.hasError ? state.errorText : null,
+//               LabelText: LabelText,
+//               validationRequired: validationRequired,
+//               initialValue: initialvalue ?? [],
+//             );
+//           },
+//         );
+// }
 
-class CtmMultiSelectDropdown extends StatefulWidget {
-  final List<String> items;
-  final List<String> selectedItems;
-  final List<String>? initialValue;
-  final Function(List<String>) onSelectionChanged;
-  final String? errorText;
-  final String LabelText;
-  final bool validationRequired;
-  final Key key;
+// class CtmMultiSelectDropdown extends StatefulWidget {
+//   final List<String> items;
+//   final List<String> selectedItems;
+//   final List<String>? initialValue;
+//   final Function(List<String>) onSelectionChanged;
+//   final String? errorText;
+//   final String LabelText;
+//   final bool validationRequired;
+//   @override
+//   final Key key;
 
-  CtmMultiSelectDropdown({
-    required this.items,
-    required this.LabelText,
-    required this.selectedItems,
-    required this.onSelectionChanged,
-    this.initialValue,
-    this.errorText,
-    required this.validationRequired,
-    required this.key,
-  });
+//   const CtmMultiSelectDropdown({super.key, 
+//     required this.items,
+//     required this.LabelText,
+//     required this.selectedItems,
+//     required this.onSelectionChanged,
+//     this.initialValue,
+//     this.errorText,
+//     required this.validationRequired,
+//     required this.key,
+//   });
 
-  @override
-  CtmMultiSelectDropdownState createState() => CtmMultiSelectDropdownState();
-}
+//   @override
+//   CtmMultiSelectDropdownState createState() => CtmMultiSelectDropdownState();
+// }
 
-class CtmMultiSelectDropdownState extends State<CtmMultiSelectDropdown> {
-  List<String> _selectedItems = [];
-  List<String> _filteredItems = [];
-  bool isDropdownOpened = false;
-  final TextEditingController _searchController = TextEditingController();
+// class CtmMultiSelectDropdownState extends State<CtmMultiSelectDropdown> {
+//   List<String> _selectedItems = [];
+//   List<String> _filteredItems = [];
+//   bool isDropdownOpened = false;
+//   final TextEditingController _searchController = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
+//   @override
+//   void initState() {
+//     super.initState();
 
-    print(widget.initialValue);
-    _selectedItems = List<String>.from(widget.selectedItems);
-    _filteredItems = List<String>.from(widget.items);
-  }
+//     print(widget.initialValue);
+//     _selectedItems = List<String>.from(widget.selectedItems);
+//     _filteredItems = List<String>.from(widget.items);
+//   }
 
-  @override
-  void didUpdateWidget(CtmMultiSelectDropdown oldWidget) {
-    super.didUpdateWidget(oldWidget);
+//   @override
+//   void didUpdateWidget(CtmMultiSelectDropdown oldWidget) {
+//     super.didUpdateWidget(oldWidget);
 
-    if (widget.selectedItems != oldWidget.selectedItems ||
-        widget.initialValue != oldWidget.initialValue) {
-      setState(() {
-        if (widget.initialValue?.isNotEmpty ?? false) {
-          print("ifcase ${widget.initialValue}");
-          _selectedItems = List<String>.from(widget.initialValue!);
-        } else {
-          print("elsecase ${widget.initialValue}");
-          _selectedItems = List<String>.from(widget.selectedItems);
-        }
-      });
-    }
-  }
+//     if (widget.selectedItems != oldWidget.selectedItems ||
+//         widget.initialValue != oldWidget.initialValue) {
+//       setState(() {
+//         if (widget.initialValue?.isNotEmpty ?? false) {
+//           print("ifcase ${widget.initialValue}");
+//           _selectedItems = List<String>.from(widget.initialValue!);
+//         } else {
+//           print("elsecase ${widget.initialValue}");
+//           _selectedItems = List<String>.from(widget.selectedItems);
+//         }
+//       });
+//     }
+//   }
 
-  void _toggleDropdown() {
-    setState(() {
-      isDropdownOpened = !isDropdownOpened;
-      if (isDropdownOpened) {
-        _filteredItems = List<String>.from(widget.items);
-      }
-    });
-  }
+//   void _toggleDropdown() {
+//     setState(() {
+//       isDropdownOpened = !isDropdownOpened;
+//       if (isDropdownOpened) {
+//         _filteredItems = List<String>.from(widget.items);
+//       }
+//     });
+//   }
 
-  void _onSearchChanged(String query) {
-    setState(() {
-      _filteredItems = widget.items
-          .where((item) => item.toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    });
-  }
+//   void _onSearchChanged(String query) {
+//     setState(() {
+//       _filteredItems = widget.items
+//           .where((item) => item.toLowerCase().contains(query.toLowerCase()))
+//           .toList();
+//     });
+//   }
 
-  void closeDropdown() {
-    setState(() {
-      isDropdownOpened = false;
-    });
-  }
+//   void closeDropdown() {
+//     setState(() {
+//       isDropdownOpened = false;
+//     });
+//   }
 
-  void resetSelection() {
-    setState(() {
-      _selectedItems.clear();
-      _searchController.clear();
-      _filteredItems = List<String>.from(widget.items);
-    });
-    widget.onSelectionChanged(_selectedItems);
-  }
+//   void resetSelection() {
+//     setState(() {
+//       _selectedItems.clear();
+//       _searchController.clear();
+//       _filteredItems = List<String>.from(widget.items);
+//     });
+//     widget.onSelectionChanged(_selectedItems);
+//   }
 
-  void _onItemCheckChanged(bool? checked, String item) {
-    setState(() {
-      if (checked!) {
-        _selectedItems.add(item);
-      } else {
-        _selectedItems.remove(item);
-      }
-    });
-    widget.onSelectionChanged(_selectedItems);
-  }
+//   void _onItemCheckChanged(bool? checked, String item) {
+//     setState(() {
+//       if (checked!) {
+//         _selectedItems.add(item);
+//       } else {
+//         _selectedItems.remove(item);
+//       }
+//     });
+//     widget.onSelectionChanged(_selectedItems);
+//   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              widget.LabelText,
-              style: TextStyle(
-                fontSize: Get.width / 28,
-                letterSpacing: .5,
-                fontWeight: FontWeight.w600,
-                color: textcolor,
-              ),
-            ),
-            const SizedBox(width: 5),
-            widget.validationRequired
-                ? Text(
-                    "*",
-                    style: TextStyle(
-                      fontSize: Get.width / 28,
-                      letterSpacing: .5,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.red,
-                    ),
-                  )
-                : const SizedBox(),
-          ],
-        ),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: _toggleDropdown,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-            decoration: BoxDecoration(
-              color: whiteColor,
-              border: Border.all(color: Colors.grey, width: 1.5),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                SizedBox(
-                  width: Get.width / 1.4,
-                  child: Text(
-                    _selectedItems.isNotEmpty
-                        ? _selectedItems.join(', ') // Show selected items
-                        : "Select",
-                    style: GoogleFonts.poppins(
-                      textStyle: TextStyle(
-                        color: _selectedItems.isEmpty ? greyColor60 : textcolor,
-                        letterSpacing: .5,
-                        fontSize: Get.width / 30,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-                Icon(
-                  isDropdownOpened
-                      ? Icons.keyboard_arrow_up
-                      : Icons.keyboard_arrow_down,
-                  color: greyColor,
-                  size: Get.width / 15,
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (isDropdownOpened)
-          Container(
-            margin: const EdgeInsets.only(top: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300, width: 1.5),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: SizedBox(
-              height: Get.height / 3,
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 5),
-                    // Search Field
-                    TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: whiteColor,
-                        hintText: "Search",
-                        prefixIcon: const Icon(Icons.search),
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 10,
-                        ),
-                        focusedBorder: SearchEnabledBorder(),
-                        enabledBorder: SearchEnabledBorder(),
-                      ),
-                      onChanged: _onSearchChanged,
-                    ),
-                    // Filtered Items List
-                    if (_filteredItems.isNotEmpty)
-                      Column(
-                        children: _filteredItems.map((item) {
-                          return CheckboxListTile(
-                            activeColor: kPrimaryColor,
-                            value: _selectedItems.contains(item),
-                            title: Text(item),
-                            controlAffinity: ListTileControlAffinity.leading,
-                            onChanged: (checked) =>
-                                _onItemCheckChanged(checked, item),
-                          );
-                        }).toList(),
-                      )
-                    else
-                      const Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          "No options available",
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        if (widget.errorText != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 5.0),
-            child: Text(
-              widget.errorText!,
-              style: TextStyle(color: Colors.red.shade900, fontSize: 12),
-            ),
-          ),
-      ],
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         Row(
+//           children: [
+//             Text(
+//               widget.LabelText,
+//               style: TextStyle(
+//                 fontSize: Get.width / 28,
+//                 letterSpacing: .5,
+//                 fontWeight: FontWeight.w600,
+//                 color: textcolor,
+//               ),
+//             ),
+//             const SizedBox(width: 5),
+//             widget.validationRequired
+//                 ? Text(
+//                     "*",
+//                     style: TextStyle(
+//                       fontSize: Get.width / 28,
+//                       letterSpacing: .5,
+//                       fontWeight: FontWeight.w600,
+//                       color: Colors.red,
+//                     ),
+//                   )
+//                 : const SizedBox(),
+//           ],
+//         ),
+//         const SizedBox(height: 8),
+//         GestureDetector(
+//           onTap: _toggleDropdown,
+//           child: Container(
+//             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+//             decoration: BoxDecoration(
+//               color: whiteColor,
+//               border: Border.all(color: Colors.grey, width: 1.5),
+//               borderRadius: BorderRadius.circular(10),
+//             ),
+//             child: Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//               children: [
+//                 SizedBox(
+//                   width: Get.width / 1.4,
+//                   child: Text(
+//                     _selectedItems.isNotEmpty
+//                         ? _selectedItems.join(', ') // Show selected items
+//                         : "Select",
+//                     style: GoogleFonts.poppins(
+//                       textStyle: TextStyle(
+//                         color: _selectedItems.isEmpty ? greyColor60 : textcolor,
+//                         letterSpacing: .5,
+//                         fontSize: Get.width / 30,
+//                         fontWeight: FontWeight.w500,
+//                       ),
+//                     ),
+//                   ),
+//                 ),
+//                 Icon(
+//                   isDropdownOpened
+//                       ? Icons.keyboard_arrow_up
+//                       : Icons.keyboard_arrow_down,
+//                   color: greyColor,
+//                   size: Get.width / 15,
+//                 ),
+//               ],
+//             ),
+//           ),
+//         ),
+//         if (isDropdownOpened)
+//           Container(
+//             margin: const EdgeInsets.only(top: 8),
+//             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+//             decoration: BoxDecoration(
+//               border: Border.all(color: Colors.grey.shade300, width: 1.5),
+//               borderRadius: BorderRadius.circular(12),
+//             ),
+//             child: SizedBox(
+//               height: Get.height / 3,
+//               child: SingleChildScrollView(
+//                 child: Column(
+//                   children: [
+//                     const SizedBox(height: 5),
+//                     // Search Field
+//                     TextField(
+//                       controller: _searchController,
+//                       decoration: InputDecoration(
+//                         filled: true,
+//                         fillColor: whiteColor,
+//                         hintText: "Search",
+//                         prefixIcon: const Icon(Icons.search),
+//                         contentPadding: const EdgeInsets.symmetric(
+//                           vertical: 10,
+//                         ),
+//                         focusedBorder: SearchEnabledBorder(),
+//                         enabledBorder: SearchEnabledBorder(),
+//                       ),
+//                       onChanged: _onSearchChanged,
+//                     ),
+//                     // Filtered Items List
+//                     if (_filteredItems.isNotEmpty)
+//                       Column(
+//                         children: _filteredItems.map((item) {
+//                           return CheckboxListTile(
+//                             activeColor: kPrimaryColor,
+//                             value: _selectedItems.contains(item),
+//                             title: Text(item),
+//                             controlAffinity: ListTileControlAffinity.leading,
+//                             onChanged: (checked) =>
+//                                 _onItemCheckChanged(checked, item),
+//                           );
+//                         }).toList(),
+//                       )
+//                     else
+//                       const Padding(
+//                         padding: EdgeInsets.all(8.0),
+//                         child: Text(
+//                           "No options available",
+//                           style: TextStyle(color: Colors.grey),
+//                         ),
+//                       ),
+//                   ],
+//                 ),
+//               ),
+//             ),
+//           ),
+//         if (widget.errorText != null)
+//           Padding(
+//             padding: const EdgeInsets.only(top: 5.0),
+//             child: Text(
+//               widget.errorText!,
+//               style: TextStyle(color: Colors.red.shade900, fontSize: 12),
+//             ),
+//           ),
+//       ],
+//     );
+//   }
+// }

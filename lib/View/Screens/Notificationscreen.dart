@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:sakthiexports/Theme/Colors.dart';
 import 'package:sakthiexports/View/util/linecontainer.dart';
-import '../../Theme/Colors.dart';
+import '../../Theme/Fonts.dart';
 import 'Sidenavbar.dart';
 
 class Notificationscreen extends StatefulWidget {
@@ -47,10 +48,7 @@ class _NotificationscreenState extends State<Notificationscreen> {
               child: Image.asset('assets/images/logo.png'),
             ),
           ),
-          title: Text(
-            "AVP Siddha Academy",
-            style: TextStyle(fontSize: 18.r, fontWeight: FontWeight.bold),
-          ),
+          title: Text("AVP Siddha Academy", style: AppTextStyles.heading),
           centerTitle: true,
           backgroundColor: Colors.white,
           actions: [
@@ -69,14 +67,7 @@ class _NotificationscreenState extends State<Notificationscreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                "Top Update",
-                style: TextStyle(
-                  color: blackColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14.r,
-                ),
-              ),
+              Text("Top Update", style: AppTextStyles.bodyLuckiest),
               SizedBox(height: 8.r),
               Expanded(
                 child: buildTopUpdateSection(notifications),
@@ -122,26 +113,18 @@ Widget buildTopUpdateSection(List<Map<String, String>> notifications) {
                                 ),
                                 SizedBox(width: 8.r),
                                 Expanded(
-                                  child: Text(
-                                    item['title'] ?? '',
-                                    style: TextStyle(
-                                      fontSize: 18.r,
-                                      color: Colors.black,
-                                    ),
-                                  ),
+                                  child: Text(item['title'] ?? '',
+                                      style: AppTextStyles.subHeading
+                                          .withColor(blackColor)),
                                 ),
                               ],
                             ),
                           ),
                           Padding(
                             padding: EdgeInsets.all(8.r),
-                            child: Text(
-                              item['description'] ?? '',
-                              style: TextStyle(
-                                fontSize: 14.r,
-                                color: blackColor60,
-                              ),
-                            ),
+                            child: Text(item['description'] ?? '',
+                                style:
+                                    AppTextStyles.small.withColor(blackColor)),
                           ),
                           SizedBox(height: 1.r),
                         ],

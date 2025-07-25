@@ -1,51 +1,44 @@
-// import 'package:get/get.dart';
+import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../Backendservice/BackendService.dart';
+import '../Backendservice/connectionService.dart';
 
-// import '../Backendservice/BackendService.dart';
-// import '../Backendservice/connectionService.dart';
+class Keyanswercontroller extends GetxController {
+  var isLoading = false.obs;
+  var answers = <Map<String, dynamic>>[].obs;
 
+  Future<void> fetchAnswers({required int examId}) async {
+    try {
+      isLoading.value = true;
 
-// class KeyAnswerController extends GetxController {
-//   final int empId;
-//   final int curriculumId;
+      final prefs = await SharedPreferences.getInstance();
+      final enrollmentNo = prefs.getString("enrollment_no");
 
-//   var isLoading = false.obs;
-//   var answerList = <Map<String, dynamic>>[].obs;
+      if (enrollmentNo == null) {
+        answers.clear();
+        return;
+      }
 
-//   KeyAnswerController(this.empId, this.curriculumId);
+      final response = await Backendservice.function(
+        {
+          "exam_id": examId,
+          "enrollment_no": enrollmentNo,
+          "button_type": "answers",
+        },
+        ConnectionService.questions,
+        "POST",
+      );
 
-//   @override
-//   void onInit() {
-//     super.onInit();
-//     fetchKeyAnswers();
-//   }
-
-//   Future<void> fetchKeyAnswers() async {
-//     try {
-//       isLoading.value = true;
-
-//       final response = await Backendservice.function(
-//         {},
-//         "${ConnectionService.keyAnswer}?emp_id=$empId&curriculum_id=$curriculumId",
-//         "GET",
-//       );
-
-//       if (response['success'] == true) {
-//         final data = response['data'] ?? [];
-
-//         answerList.value = List<Map<String, dynamic>>.from(data.map((item) => {
-//               'question': item['question'],
-//               'answer': item['answer'],
-//               'userAnswer': item['user_answer'],
-//             }));
-//       } else {
-//         answerList.clear();
-//       }
-//     } catch (e) {
-//       print("Error fetching key answers: $e");
-//       answerList.clear();
-//     } finally {
-//       isLoading.value = false;
-//     }
-//   }
-// }
-// }
+      if (response['status'] == 'success') {
+        answers.value = List<Map<String, dynamic>>.from(response['answers']);
+      } else {
+        answers.clear();
+      }
+    } catch (e) {
+      print("Error fetching answers: $e");
+      answers.clear();
+    } finally {
+      isLoading.value = false;
+    }
+  }
+}

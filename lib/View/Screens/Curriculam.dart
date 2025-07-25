@@ -3,9 +3,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sakthiexports/Theme/Colors.dart';
 import 'package:sakthiexports/View/Screens/Sidenavbar.dart';
 import 'package:sakthiexports/View/util/linecontainer.dart';
+import '../../Theme/Fonts.dart';
 
 class CurriculumScreen extends StatelessWidget {
-  const CurriculumScreen({super.key});
+  const CurriculumScreen({super.key, });
 
   @override
   Widget build(BuildContext context) {
@@ -28,14 +29,17 @@ class CurriculumScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         leading: Padding(
-          padding:  EdgeInsets.all(8.r),
+          padding: EdgeInsets.all(8.r),
           child: SizedBox(
             width: 50.r,
             height: 50.r,
             child: Image.asset('assets/images/logo.png'),
           ),
         ),
-        title: const Text("AVP Siddha Academy"),
+        title: Text(
+          "AVP Siddha Academy",
+          style: AppTextStyles.heading,
+        ),
         centerTitle: true,
         actions: [
           Builder(
@@ -49,18 +53,16 @@ class CurriculumScreen extends StatelessWidget {
         ],
       ),
       body: Padding(
-        padding:  EdgeInsets.all(12.r),
+        padding: EdgeInsets.all(12.r),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-             Text(
-              "Curriculum",
-              style: TextStyle(fontSize: 20.r, fontWeight: FontWeight.bold),
-            ),
-             SizedBox(height: 12.r),
+            Text("Curriculum",
+                style: AppTextStyles.subHeading.withColor(blackColor)),
+            SizedBox(height: 12.r),
             linecontainer(
               Padding(
-                padding:  EdgeInsets.all(8.r),
+                padding: EdgeInsets.all(8.r),
                 child: Column(
                   children: List.generate(data.length, (index) {
                     final item = data[index];
@@ -72,29 +74,26 @@ class CurriculumScreen extends StatelessWidget {
                           color: isEven
                               ? const Color.fromARGB(255, 234, 230, 255)
                               : Colors.transparent,
-                          padding:  EdgeInsets.symmetric(
+                          padding: EdgeInsets.symmetric(
                               vertical: 10.r, horizontal: 10.r),
                           child: Row(
                             children: [
                               SizedBox(
                                 width: 120.r,
-                                child: Text(
-                                  "${item['label']}:",
-                                  style:  TextStyle(
-                                      fontSize: 10.r, color: greyColor),
-                                ),
+                                child: Text("${item['label']}:",
+                                    style: AppTextStyles.small
+                                        .withColor(blackColor)),
                               ),
                               Expanded(
-                                child: Text(
-                                  item['value'] ?? "",
-                                  textAlign: TextAlign.end,
-                                  style:  TextStyle(fontSize: 12.r),
-                                ),
+                                child: Text(item['value'] ?? "",
+                                    textAlign: TextAlign.end,
+                                    style: AppTextStyles.small
+                                        .withColor(blackColor)),
                               ),
                             ],
                           ),
                         ),
-                         Divider(height: 1.r, color: Colors.grey),
+                        Divider(height: 1.r, color: Colors.grey),
                       ],
                     );
                   }),

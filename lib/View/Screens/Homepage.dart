@@ -4,7 +4,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:marquee/marquee.dart';
 import 'package:sakthiexports/Theme/Colors.dart';
 import 'package:get/get.dart';
+import 'package:sakthiexports/View/Screens/Testcard.dart';
 import 'package:sakthiexports/View/util/linecontainer.dart';
+import '../../Theme/Fonts.dart';
 import 'Curriculam.dart';
 import 'Notificationscreen.dart';
 import 'Profile.dart';
@@ -60,9 +62,9 @@ class _CurriculumDashboardState extends State<CurriculumDashboard> {
             child: Image.asset('assets/images/logo.png'),
           ),
         ),
-        title: const Text(
+        title: Text(
           "AVP Siddha Academy",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: AppTextStyles.heading,
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -94,8 +96,7 @@ class _CurriculumDashboardState extends State<CurriculumDashboard> {
               SizedBox(height: 10.r),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 18.r),
-                child: Text("Curriculum:",
-                    style: TextStyle(fontSize: 15.r, color: kPrimaryColor)),
+                child: Text("Curriculum:", style: AppTextStyles.body),
               ),
               const SizedBox(height: 4),
               Padding(
@@ -107,7 +108,7 @@ class _CurriculumDashboardState extends State<CurriculumDashboard> {
                         icon: Image.asset('assets/Icons/Question.png'),
                         label: "Q & A Keys",
                         onTap: () {
-                          Get.to(() => const CurriculumListPage());
+                          Get.to(() => CurriculumListPage());
                         }),
                     const SizedBox(width: 5),
                     DashboardCard(
@@ -144,10 +145,7 @@ class _CurriculumDashboardState extends State<CurriculumDashboard> {
                           SizedBox(width: 8.r),
                           Text(
                             "Updates:",
-                            style: TextStyle(
-                              color: kPrimaryColor,
-                              fontSize: 16.r,
-                            ),
+                            style: AppTextStyles.body,
                           ),
                         ],
                       ),
@@ -155,52 +153,53 @@ class _CurriculumDashboardState extends State<CurriculumDashboard> {
                   ),
                   Padding(
                     padding: EdgeInsets.all(8.r),
-                    child: GestureDetector(
-                      onTap: () {
+                    child: IconButton(
+                      onPressed: () {
                         Get.to(() => const Notificationscreen());
                       },
-                      child: Text(
-                        "View All ➜",
-                        style: TextStyle(
-                          color: kPrimaryColor,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 12.r,
-                        ),
+                      icon: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            "View All",
+                            style: AppTextStyles.body,
+                          ),
+                          SizedBox(width: 4.r),
+                          Icon(Icons.arrow_forward_outlined,
+                              size: 14.r, color: kPrimaryColor),
+                        ],
                       ),
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 2.r),
               Padding(
-                padding: EdgeInsets.all(12.r),
-                child: linecontainer(
-                  Padding(
-                    padding: EdgeInsets.all(8.r),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: 10.r),
-                        Padding(
-                          padding: EdgeInsets.all(8.r),
-                          child: Text(
-                            "Model Test ",
-                            style: TextStyle(
-                              fontSize: 18.r,
-                              color: Colors.black,
-                            ),
+                padding: EdgeInsets.all(8.r),
+                child: SizedBox(
+                  width: 350,
+                  child: linecontainer(
+                    Padding(
+                      padding: EdgeInsets.all(12.r),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: 10.r),
+                          Padding(
+                            padding: EdgeInsets.all(8.r),
+                            child: Text("Model Test ",
+                                style: AppTextStyles.subHeading
+                                    .withColor(blackColor)),
                           ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.all(8.r),
-                          child: Text(
-                            "009 Batch  13.07.2025 (Sunday) Test portion Test portion ",
-                            style:
-                                TextStyle(fontSize: 14.r, color: blackColor60),
+                          Padding(
+                            padding: EdgeInsets.all(8.r),
+                            child: Text(
+                                "009 Batch  13.07.2025 (Sunday) Test portion Test portion ",
+                                style:
+                                    AppTextStyles.small.withColor(blackColor)),
                           ),
-                        ),
-                        SizedBox(height: 12.r),
-                      ],
+                          SizedBox(height: 12.r),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -219,7 +218,7 @@ class _CurriculumDashboardState extends State<CurriculumDashboard> {
               buildModelTestCard(
                 title: "Model Test - 1 (06.07.2025)",
                 onViewResult: () {
-                  Get.to(() => const CurriculumScreen());
+                  Get.to(() => CurriculumScreen());
                 },
               )
             ]),
@@ -258,7 +257,7 @@ class DashboardCard extends StatelessWidget {
                 SizedBox(height: 8.r),
                 Text(
                   label,
-                  style: TextStyle(fontSize: 14.r, color: kPrimaryColor),
+                  style: AppTextStyles.body,
                 ),
               ],
             ),
@@ -273,7 +272,7 @@ class DashboardCard extends StatelessWidget {
 Widget buildMarqueeText(String message) {
   return Marquee(
     text: message,
-    style: const TextStyle(fontSize: 14, color: kPrimaryColor),
+    style: AppTextStyles.body,
     scrollAxis: Axis.horizontal,
     crossAxisAlignment: CrossAxisAlignment.center,
     blankSpace: 60.0,
@@ -308,7 +307,7 @@ Widget buildExamScheduleCard({
                   children: [
                     Text(
                       "Schedule",
-                      style: TextStyle(fontSize: 18.r, color: kPrimaryColor),
+                      style: AppTextStyles.subHeading,
                     ),
                     Container(
                       padding:
@@ -319,11 +318,7 @@ Widget buildExamScheduleCard({
                       ),
                       child: Text(
                         scheduleDate,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14.r,
-                        ),
+                        style: AppTextStyles.body.withColor(whiteColor),
                       ),
                     ),
                   ],
@@ -335,21 +330,19 @@ Widget buildExamScheduleCard({
                   color: kPrimaryColor,
                   child: Row(
                     children: [
-                      const Expanded(
+                      Expanded(
                         flex: 1,
-                        child: Text("#", style: TextStyle(color: Colors.white)),
+                        child: Text("#", style: AppTextStyles.small),
                       ),
                       SizedBox(width: 80.r),
-                      const Expanded(
+                      Expanded(
                         flex: 3,
-                        child: Text("Subject",
-                            style: TextStyle(color: Colors.white)),
+                        child: Text("Subject", style: AppTextStyles.small),
                       ),
                       SizedBox(width: 10.r),
-                      const Expanded(
+                      Expanded(
                         flex: 5,
-                        child: Text("Description",
-                            style: TextStyle(color: Colors.white)),
+                        child: Text("Description", style: AppTextStyles.small),
                       ),
                     ],
                   ),
@@ -364,17 +357,15 @@ Widget buildExamScheduleCard({
                       children: [
                         Expanded(
                           flex: 1,
-                          child: Text(
-                            "$index",
-                            style: TextStyle(fontSize: 12.r),
-                          ),
+                          child: Text("$index",
+                              style: AppTextStyles.small.withColor(blackColor)),
                         ),
                         SizedBox(width: 80.r),
                         Expanded(
                           flex: 3,
                           child: Text(
                             subject['subject'] ?? '',
-                            style: TextStyle(fontSize: 12.r),
+                            style: AppTextStyles.small.withColor(blackColor),
                           ),
                         ),
                         SizedBox(width: 10.r),
@@ -382,13 +373,13 @@ Widget buildExamScheduleCard({
                           flex: 5,
                           child: Text(
                             subject['description'] ?? '',
-                            style: TextStyle(fontSize: 12.r),
+                            style: AppTextStyles.small.withColor(blackColor),
                           ),
                         ),
                       ],
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),
@@ -399,7 +390,6 @@ Widget buildExamScheduleCard({
 }
 
 // Subject card main
-
 Widget buildSubjectCard(String title) {
   return Padding(
     padding: EdgeInsets.all(8.r),
@@ -413,15 +403,25 @@ Widget buildSubjectCard(String title) {
         elevation: 2,
         child: Padding(
           padding: EdgeInsets.all(20.r),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
+              Text(
+                title,
+                style: AppTextStyles.subHeading.withColor(whiteColor),
+              ),
+              SizedBox(height: 10.r),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10))),
+                onPressed: () {
+                  Get.to(() => const Testcard());
+                },
                 child: Text(
-                  title,
-                  style: TextStyle(
-                    color: whiteColor,
-                    fontSize: 16.r,
-                  ),
+                  'Start Test',
+                  style: AppTextStyles.small.withColor(whiteColor),
                 ),
               ),
             ],
@@ -454,11 +454,7 @@ Widget buildModelTestCard({
               padding: EdgeInsets.all(8.r),
               child: Text(
                 title,
-                style: TextStyle(
-                  fontSize: 16.r,
-                  fontWeight: FontWeight.bold,
-                  color: whiteColor,
-                ),
+                style: AppTextStyles.subHeading.withColor(whiteColor),
               ),
             ),
             SizedBox(height: 12.r),
@@ -472,9 +468,9 @@ Widget buildModelTestCard({
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text(
+                child: Text(
                   "View Result",
-                  style: TextStyle(color: Colors.white),
+                  style: AppTextStyles.small.withColor(whiteColor),
                 ),
               ),
             ),

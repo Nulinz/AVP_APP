@@ -1,35 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+import 'package:sakthiexports/Controller/Questionpapercontroller.dart';
 import 'package:sakthiexports/Theme/Colors.dart';
-import 'Sidenavbar.dart';
 import 'package:sakthiexports/View/util/linecontainer.dart';
+import 'package:sakthiexports/View/Screens/Sidenavbar.dart';
 
 class Questionpaper extends StatefulWidget {
-  const Questionpaper({super.key});
+    final int examId;
+
+  const Questionpaper({super.key, required this.examId});
 
   @override
   State<Questionpaper> createState() => _QuestionpaperState();
 }
 
 class _QuestionpaperState extends State<Questionpaper> {
-  final List<Map<String, dynamic>> questions = [
-    {
-      "question": "இதை மிகச் சேர்த்தால் அருசியமும், நெஞ்சிற் கபமும் விளையும்",
-      "options": ["பழைய தேன்", "புதிய தேன்", "மனைத்த தேன்", "மலைத் தேன்"],
-    },
-    {
-      "question": "ஷயம், அதிகூலம் முதலிய பிணிகளை நீக்குவது",
-      "options": ["மலைத் தேன்", "கொம்புத் தேன்", "மரப்பொந்து", "மனைத்த தேன்"],
-    },
-    {
-      "question": "சுராவின் செய்கை",
-      "options": ["பால் பெறுக்கு", "வலிகொடுக்க", "நீரிழிவு", "உடல் வளர்ச்சி"],
-    },
-  ];
+  final Questionpapercontroller qController =
+      Get.put(Questionpapercontroller());
+
+  @override
+  void initState() {
+    super.initState();
+    qController.fetchQuestions(examId:  widget.examId);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      
       backgroundColor: const Color.fromARGB(255, 221, 215, 244),
       drawer: Drawer(
         width: MediaQuery.of(context).size.width * 0.8,
@@ -60,45 +59,57 @@ class _QuestionpaperState extends State<Questionpaper> {
       ),
       body: Padding(
         padding: EdgeInsets.all(12.r),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Curriculum : Test Exam - ANATOMY",
-              style: TextStyle(fontSize: 16.r, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 12.r),
-            Expanded(
-              child: ListView.builder(
-                itemCount: questions.length,
-                itemBuilder: (context, index) {
-                  final question = questions[index];
-                  final options = question["options"] as List<String>;
+        child: Obx(() {
+          if (qController.isLoading.value) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (qController.questions.isEmpty) {
+            return const Center(child: Text("No questions available."));
+          }
 
-                  return Padding(
-                    padding: EdgeInsets.only(
-                      bottom: 16.r,
-                    ),
-                    child: linecontainer(
-                      Padding(
-                        padding: EdgeInsets.all(12.r),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildRow("S.NO", "${index + 1}", 1),
-                            _buildRow("QUESTION", question["question"], 2),
-                            for (int i = 0; i < options.length; i++)
-                              _buildRow("OPTION-${i + 1}", options[i], i + 3),
-                          ],
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Curriculum : Test Exam - ANATOMY",
+                style: TextStyle(fontSize: 16.r, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 12.r),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: qController.questions.length,
+                  itemBuilder: (context, index) {
+                    final question = qController.questions[index];
+                    final options = [
+                      question['option1'],
+                      question['option2'],
+                      question['option3'],
+                      question['option4']
+                    ];
+
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 16.r),
+                      child: linecontainer(
+                        Padding(
+                          padding: EdgeInsets.all(12.r),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildRow("S.NO", "${index + 1}", 1),
+                              _buildRow(
+                                  "QUESTION", question["question_name"], 2),
+                              for (int i = 0; i < options.length; i++)
+                                _buildRow("OPTION-${i + 1}", options[i], i + 3),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          );
+        }),
       ),
     );
   }

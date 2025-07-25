@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 class ErrorScreen extends StatelessWidget {
   final String errorMessage;
 
-  const ErrorScreen({Key? key, required this.errorMessage}) : super(key: key);
+  const ErrorScreen({super.key, required this.errorMessage});
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +24,7 @@ class ErrorScreen extends StatelessWidget {
               height: Get.height / 3,
               width: Get.width / 1,
               child: const Image(
-                image: AssetImage("assets/Images/404_error.png"),
+                image: AssetImage("assets/images/404_error.png"),
               ),
             ),
             Text(

@@ -1,11 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import 'package:sakthiexports/Theme/Colors.dart';
-
+import 'package:sakthiexports/View/util/linecontainer.dart';
+import '../../Controller/Profilecontroller.dart';
+import '../../Theme/Fonts.dart';
 import 'Sidenavbar.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final profileController = Get.put(ProfileController());
 
   @override
   Widget build(BuildContext context) {
@@ -26,92 +36,81 @@ class ProfileScreen extends StatelessWidget {
               child: Image.asset('assets/images/logo.png'),
             ),
           ),
-          title: const Text("AVP Siddha Academy"),
+          title: Text("AVP Siddha Academy", style: AppTextStyles.heading),
           centerTitle: true,
           backgroundColor: Colors.white,
           actions: [
             Builder(
               builder: (context) => IconButton(
                 icon: const Icon(Icons.menu, color: Colors.black),
-                onPressed: () {
-                  Scaffold.of(context).openDrawer();
-                },
+                onPressed: () => Scaffold.of(context).openDrawer(),
               ),
             ),
           ],
         ),
-        body: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.all(12.r),
-            child: Column(
-              children: [
-                SizedBox(height: 10.r),
-                Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.r)),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: kPrimaryColor,
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(12.r),
-                            topRight: Radius.circular(12.r),
-                          ),
-                        ),
-                        padding: EdgeInsets.all(10.r),
-                        child: Row(
-                          children: [
-                            const CircleAvatar(
-                              radius: 30,
-                              backgroundColor: Colors.white,
-                              backgroundImage:
-                                  AssetImage('assets/images/ProfileAvatar.jpg'),
+        body: Obx(() {
+          if (profileController.isLoading.value) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          return SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.all(12.r),
+              child: Column(
+                children: [
+                  SizedBox(height: 10.r),
+                  linecontainer(
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: kPrimaryColor,
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(12.r),
+                              topRight: Radius.circular(12.r),
                             ),
-                            SizedBox(width: 16.r),
-                            Expanded(
-                              child: Text(
-                                "DR. NAVEEN BALAJI V",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18.r,
+                          ),
+                          padding: EdgeInsets.all(10.r),
+                          child: Row(
+                            children: [
+                              const CircleAvatar(
+                                radius: 30,
+                                backgroundColor: Colors.white,
+                                backgroundImage: NetworkImage(
+                                    'https://cdn3.iconfinder.com/data/icons/web-design-and-development-2-6/512/87-1024.png'),
+                              ),
+                              SizedBox(width: 16.r),
+                              Expanded(
+                                child: Text(
+                                  profileController.Name.value,
+                                  style: AppTextStyles.subHeading
+                                      .withColor(whiteColor),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.all(16.r),
-                        child: const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            RowItem(
-                                label: "Enrollment No", value: "AVP202509031"),
-                            RowItem(label: "Father Name", value: "VENKATESAN"),
-                            RowItem(label: "Mother Name", value: "RAM"),
-                            RowItem(label: "Gender", value: "Male"),
-                            RowItem(label: "Contact No", value: "824824824"),
-                            RowItem(
-                                label: "Email",
-                                value: "naveenbalajivk@gmail.com"),
-                            RowItem(
-                              label: "Address",
-                              value:
-                                  "101/5,000\nCOMPLEX,THONDI ROAD,\nNEAR JEEVA SCHOOL,\nPALLIVASAL NAGAR,\nRAMANATHAPURAM DISTRICT",
-                            ),
-                          ],
+                        Padding(
+                          padding: EdgeInsets.all(16.r),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: profileController.profileData.map((item) {
+                              return RowItem(
+                                label: item['label']!,
+                                value: item['value']!,
+                              );
+                            }).toList(),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ),
+          );
+        }),
       ),
     );
   }
@@ -132,17 +131,13 @@ class RowItem extends StatelessWidget {
         children: [
           SizedBox(
             width: 120.r,
-            child: Text(
-              "$label:",
-              style: TextStyle(fontSize: 12.r),
-            ),
+            child: Text("$label:",
+                style: AppTextStyles.small.withColor(blackColor)),
           ),
           Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.end,
-              style: TextStyle(color: Colors.black54, fontSize: 12.r),
-            ),
+            child: Text(value,
+                textAlign: TextAlign.end,
+                style: AppTextStyles.small.withColor(blackColor)),
           ),
         ],
       ),
