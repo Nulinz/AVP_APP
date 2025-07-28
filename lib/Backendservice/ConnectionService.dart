@@ -7,6 +7,7 @@ class ConnectionService {
 
   static var login = "$base_url/fetch.php";
   static var logout = "$base_url/logout";
+  static var Dashboard3 = "$base_url/notification_fetch.php";
   static var videoListUrl = "$base_url/video_fetch.php";
   static var profile = "$base_url/fetch.php";
   static var curriculumList = "$base_url/fetch.php";
@@ -15,4 +16,5 @@ class ConnectionService {
   static var viewresult = "$base_url/fetch.php";
   static var examstart = "$base_url/insert.php";
   static var examtime = "$base_url/insert.php";
+  static var notification = "$base_url/notification_fetch.php";
 }

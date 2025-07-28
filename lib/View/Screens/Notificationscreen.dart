@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:sakthiexports/Controller/NotificationController.dart';
 import 'package:sakthiexports/Theme/Colors.dart';
 import 'package:sakthiexports/View/util/linecontainer.dart';
 import '../../Theme/Fonts.dart';
@@ -14,20 +15,13 @@ class Notificationscreen extends StatefulWidget {
 }
 
 class _NotificationscreenState extends State<Notificationscreen> {
-  final List<Map<String, String>> notifications = [
-    {
-      "title": "Model Test",
-      "description": "009 Batch 13.07.2025 (Sunday) Test portion Test portion",
-    },
-    {
-      "title": "Model Test 2",
-      "description": "New student orientation on 15.07.2025 (Monday)",
-    },
-    {
-      "title": "Model Test 3",
-      "description": "Submit assignment before 18.07.2025 (Thursday)",
-    },
-  ];
+  final NotificationController controller = Get.put(NotificationController());
+
+  @override
+  void initState() {
+    super.initState();
+    controller.fetchNotifications();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,16 +58,23 @@ class _NotificationscreenState extends State<Notificationscreen> {
         ),
         body: Padding(
           padding: EdgeInsets.all(12.r),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("Top Update", style: AppTextStyles.bodyLuckiest),
-              SizedBox(height: 8.r),
-              Expanded(
-                child: buildTopUpdateSection(notifications),
-              ),
-            ],
-          ),
+          child: Obx(() {
+            if (controller.isLoading.value) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Top Update", style: AppTextStyles.bodyLuckiest),
+                SizedBox(height: 8.r),
+                Expanded(
+                  child: buildTopUpdateSection(controller.notifications),
+                ),
+              ],
+            );
+          }),
         ),
       ),
     );
