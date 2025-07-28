@@ -8,19 +8,23 @@ import '../../Theme/Fonts.dart';
 import 'Sidenavbar.dart';
 
 class Testcard extends StatefulWidget {
-  const Testcard({super.key});
+  final int examid;
+  const Testcard({
+    super.key,
+    required this.examid,
+  });
 
   @override
   State<Testcard> createState() => _TestcardState();
 }
 
 class _TestcardState extends State<Testcard> {
-  final TestController testController = Get.put(TestController());
+  late Testcardcontroller testController;
 
   @override
   void initState() {
     super.initState();
-    testController.fetchQuestions(examId: "660");
+    testController = Get.put(Testcardcontroller(examId: widget.examid));
   }
 
   Future<bool?> showExitConfirmationDialog(BuildContext context) {
@@ -29,7 +33,8 @@ class _TestcardState extends State<Testcard> {
       builder: (context) => AlertDialog(
         title: const Text("Exit Test?"),
         content: const Text(
-            "Oops! You haven't submitted the test yet. If you leave, it will be auto-submitted. Do you still want to go back?"),
+          "Oops! You haven't submitted the test yet. If you leave, it will be auto-submitted. Do you still want to go back?",
+        ),
         actions: [
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -45,7 +50,7 @@ class _TestcardState extends State<Testcard> {
               foregroundColor: Colors.white,
             ),
             onPressed: () {
-              testController.handleSubmit(message: "Test auto-submitted!!");
+              testController.handleSubmit();
               Navigator.of(context).pop(true);
             },
             child: const Text("Yes, Exit"),
@@ -112,15 +117,18 @@ class _TestcardState extends State<Testcard> {
                     Text(testController.subject.value),
                     const Spacer(),
                     const Text('Close In: '),
-                    Text(testController
-                        .formatTime(testController.remainingSeconds.value)),
+                    Obx(() => Text(
+                          testController.formatTime(
+                              testController.remainingSeconds.value),
+                        )),
                   ],
                 ),
                 const SizedBox(height: 10),
                 Card(
                   elevation: 3,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   color: whiteColor,
                   child: SizedBox(
                     width: double.infinity,
@@ -138,22 +146,30 @@ class _TestcardState extends State<Testcard> {
                             spacing: 10.r,
                             runSpacing: 10.r,
                             children: List.generate(
-                                testController.questions.length, (index) {
-                              final isAnswered = testController.selectedOptions
-                                  .containsKey(index);
-                              return Container(
-                                width: 24.r,
-                                height: 24.r,
-                                decoration: BoxDecoration(
-                                  color: isAnswered ? Colors.green : Colors.red,
-                                  shape: BoxShape.circle,
-                                ),
-                                alignment: Alignment.center,
-                                child: Text('${index + 1}',
-                                    style: AppTextStyles.small
-                                        .withColor(whiteColor)),
-                              );
-                            }),
+                              testController.questions.length,
+                              (index) {
+                                final questId = testController.questions[index]
+                                        ['question_id']
+                                    .toString();
+                                final isAnswered = testController
+                                    .selectedAnswers
+                                    .containsKey(questId);
+
+                                return Container(
+                                  width: 24.r,
+                                  height: 24.r,
+                                  decoration: BoxDecoration(
+                                    color:
+                                        isAnswered ? Colors.green : Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text('${index + 1}',
+                                      style: AppTextStyles.small
+                                          .withColor(whiteColor)),
+                                );
+                              },
+                            ),
                           ),
                         ],
                       ),
@@ -180,7 +196,8 @@ class _TestcardState extends State<Testcard> {
                                           builder: (context) => AlertDialog(
                                             title: const Text("Submit Test?"),
                                             content: const Text(
-                                                "Are you sure you want to submit the test? You cannot make changes afterward."),
+                                              "Are you sure you want to submit the test? You cannot make changes afterward.",
+                                            ),
                                             actions: [
                                               ElevatedButton(
                                                 style: ElevatedButton.styleFrom(
@@ -226,50 +243,57 @@ class _TestcardState extends State<Testcard> {
                             );
                           }
 
+                          final question = testController.questions[index];
+                          final questId = question['question_id'].toString();
                           final questionText =
-                              "${index + 1}. ${testController.questions[index]['question']}";
+                              "${index + 1}. ${question['question_name'] ?? ''}";
 
-                          final rawOptions =
-                              testController.questions[index]['options'];
-                          final options = List<String>.from(rawOptions);
+                          final options = [
+                            question['option1'],
+                            question['option2'],
+                            question['option3'],
+                            question['option4'],
+                          ].whereType<String>().toList();
+
                           return Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(questionText,
-                                    style: AppTextStyles.subHeading
-                                        .withColor(blackColor)),
+                                Text(
+                                  questionText,
+                                  style: AppTextStyles.subHeading
+                                      .withColor(blackColor),
+                                ),
                                 SizedBox(height: 6.r),
                                 ...options.map((option) {
                                   final isSelected =
-                                      testController.selectedOptions[index] ==
+                                      testController.selectedAnswers[questId] ==
                                           option;
                                   return RadioListTile<String>(
                                     toggleable: true,
                                     key: ValueKey(
-                                        'q${index}_${option}_$isSelected'),
+                                        'q${questId}_${option}_$isSelected'),
                                     title: Text(option),
                                     value: option,
                                     groupValue:
-                                        testController.selectedOptions[index],
+                                        testController.selectedAnswers[questId],
                                     onChanged: testController.isSubmitted.value
                                         ? null
                                         : (value) {
                                             if (value == null) {
-                                              testController.selectedOptions
-                                                  .remove(index);
+                                              testController.selectedAnswers
+                                                  .remove(questId);
                                             } else {
-                                              testController
-                                                      .selectedOptions[index] =
-                                                  value;
+                                              testController.selectedAnswers[
+                                                  questId] = value;
                                             }
                                             testController.update();
                                           },
                                     contentPadding: EdgeInsets.zero,
                                     dense: true,
                                   );
-                                }),
+                                }).toList(),
                               ],
                             ),
                           );
@@ -277,7 +301,7 @@ class _TestcardState extends State<Testcard> {
                       ),
                     ),
                   ),
-                ),
+                )
               ],
             ),
           ),

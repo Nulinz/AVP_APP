@@ -15,4 +15,5 @@ class ConnectionService {
   static var viewresult = "$base_url/fetch.php";
   static var examstart = "$base_url/insert.php";
   static var examtime = "$base_url/insert.php";
+  static var submit = "$base_url/submit_answers.php";
 }

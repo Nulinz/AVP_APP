@@ -289,7 +289,43 @@ class Backendservice {
       throw Exception("Unexpected response format");
     }
   }
+
+  static Future<Map<String, dynamic>> functionMethod(
+    Map<String, dynamic> data,
+    String url,
+    String method,
+  ) async {
+    final dio = Dio();
+
+    final response = await dio.request(
+      url,
+      data: method == 'GET' ? null : jsonEncode(data),
+      options: Options(
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      ),
+    );
+
+    dynamic jsonData = response.data;
+
+    if (jsonData is String) {
+      try {
+        jsonData = json.decode(jsonData);
+      } catch (e) {
+        throw Exception("Invalid JSON response");
+      }
+    }
+
+    if (jsonData is Map<String, dynamic>) {
+      return jsonData;
+    } else {
+      throw Exception("Unexpected response format");
+    }
+  }
 }
+
 Future<void> printSharedPreferences() async {
   final prefs = await SharedPreferences.getInstance();
   final keys = prefs.getKeys();

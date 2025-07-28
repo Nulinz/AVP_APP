@@ -1,21 +1,77 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:sakthiexports/Backendservice/ConnectionService.dart';
-import '../../Backendservice/BackendService.dart';
 
-class TestController extends GetxController {
-  RxList<Map<String, dynamic>> questions = <Map<String, dynamic>>[].obs;
-  RxBool isLoading = true.obs;
+import 'package:get/get.dart';
+import 'package:sakthiexports/Components/Snackbars.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../Backendservice/BackendService.dart';
+import '../Backendservice/connectionService.dart';
+
+class Testcardcontroller extends GetxController {
+  final int examId;
+  var isLoading = false.obs;
+  var questions = <Map<String, dynamic>>[].obs;
+  RxMap<String, String> selectedOptions = <String, String>{}.obs;
+
+  var selectedAnswers = <String, String>{}.obs;
+  // key: quest_id, value: selected option
+
+  Testcardcontroller({required this.examId});
+
   RxString subject = ''.obs;
   RxInt examDuration = 0.obs;
   RxString errorMessage = ''.obs;
-
-  final Map<int, String> selectedOptions = {};
-
-  Timer? timer;
   RxInt remainingSeconds = 0.obs;
   RxBool isSubmitted = false.obs;
+  RxBool isUpdating = false.obs;
+
+  Timer? timer;
+
+  @override
+  void onInit() {
+    fetchQuestions();
+    super.onInit();
+  }
+
+  Future<void> fetchQuestions() async {
+    try {
+      isLoading.value = true;
+      final prefs = await SharedPreferences.getInstance();
+      final storedEnrollmentNo = prefs.getString('enrollment_no') ?? '';
+
+      final requestData = {
+        "exam_id": examId,
+        "enrollment_no": storedEnrollmentNo,
+        "button_type": "get_questions",
+      };
+
+      print("Sending request: $requestData");
+
+      final response = await Backendservice.function(
+        requestData,
+        ConnectionService.examtime,
+        "POST",
+      );
+      print("RESPONSES : $response");
+      print("RESPONSES DATA : ${response['data']}");
+
+      if (response['status'] == 'success') {
+        questions.value = List<Map<String, dynamic>>.from(response['data']);
+        subject.value = response['subject'] ?? '';
+        examDuration.value =
+            int.tryParse(response['exam_duration'].toString()) ?? 0;
+
+        remainingSeconds.value = examDuration.value * 60;
+        startTimer();
+      } else {
+        questions.clear();
+      }
+    } catch (e) {
+      print("Error fetching questions: $e");
+      questions.clear();
+    } finally {
+      isLoading.value = false;
+    }
+  }
 
   void startTimer() {
     timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -27,71 +83,57 @@ class TestController extends GetxController {
     });
   }
 
-  Future<void> fetchQuestions({required String examId}) async {
+  void handleSubmit() async {
+    if (isSubmitted.value) return;
+    timer?.cancel();
+
+    final prefs = await SharedPreferences.getInstance();
+    final storedEnrollmentNo = prefs.getString('enrollment_no') ?? '';
+
+    final payload = {
+      "button_type": "submit_answers",
+      "exam_id": examId.toString(),
+      "enrollment_no": storedEnrollmentNo,
+      "answers": selectedAnswers.entries.map((e) {
+        return {
+          "quest_id": e.key.toString(),
+          "answer": e.value.toString(),
+        };
+      }).toList(),
+    };
+
+    print("PAYLOAD : $payload");
+
     try {
-      isLoading(true);
-      final response = await Backendservice.function(
-        {
-          "button_type": "get_questions",
-          "exam_id": examId,
-        },
-        ConnectionService.examtime,
+      isUpdating.value = true;
+
+      final response = await Backendservice.functionMethod(
+        payload,
+        ConnectionService.submit,
         "POST",
       );
 
-      if (response['status'] == "success") {
-        subject.value = response['subject'];
-        examDuration.value =
-            int.tryParse(response['exam_duration'].toString()) ?? 30;
-        remainingSeconds.value = examDuration.value * 60;
+      print("RESPONSE : $response");
 
-        final List<dynamic> rawQuestions = response['data'];
-        questions.value = rawQuestions.map((q) {
-          return {
-            'question': q['question_name'],
-            'options': [
-              q['option1'],
-              q['option2'],
-              q['option3'],
-              q['option4'],
-            ],
-          };
-        }).toList();
-
-        startTimer();
+      if (response['status'] == 'success') {
+        isSubmitted(true);
+        CustomSnackbar("Success", "Answers submitted successfully");
       } else {
-        errorMessage.value = 'Something went wrong.';
+        // Get.snackbar("Error", response['message'] ?? "Submission failed");
+        CustomErrorSnackbar();
       }
     } catch (e) {
-      errorMessage.value = 'Failed to load questions';
+      print("Submit error: $e");
+      //  Get.snackbar("Error", "Something went wrong during submission");
+      CustomErrorSnackbar();
     } finally {
-      isLoading(false);
+      isUpdating.value = false;
     }
-  }
-
-  void handleSubmit({String? message}) {
-    if (isSubmitted.value) return;
-    timer?.cancel();
-    isSubmitted(true);
-    Get.snackbar(
-      "Test Submitted",
-      message ?? "Your answers have been submitted.",
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 3),
-    );
   }
 
   String formatTime(int seconds) {
     final minutes = (seconds ~/ 60).toString().padLeft(2, '0');
     final secs = (seconds % 60).toString().padLeft(2, '0');
     return "$minutes:$secs";
-  }
-
-  @override
-  void onClose() {
-    timer?.cancel();
-    super.onClose();
   }
 }

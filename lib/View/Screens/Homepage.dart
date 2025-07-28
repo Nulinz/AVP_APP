@@ -242,7 +242,7 @@ class _CurriculumDashboardState extends State<CurriculumDashboard> {
                             canStart: canStart,
                             onTap: () {
                               if (canStart) {
-                                Get.to(() => const Testcard())?.then((_) {
+                                Get.to(() =>  Testcard(examid: exam['exam_id'],))?.then((_) {
                                   _refreshData();
                                 });
                               } else {
