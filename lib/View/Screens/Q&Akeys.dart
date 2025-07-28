@@ -6,8 +6,9 @@ import 'package:get/get.dart';
 import 'package:sakthiexports/Theme/Colors.dart';
 import 'package:sakthiexports/Theme/Fonts.dart';
 import 'package:sakthiexports/View/util/linecontainer.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../Controller/Questionandanswercontroller.dart';
-import 'Curriculam.dart';
+import 'ViewresultScreen.dart';
 import 'Keyanswer.dart';
 import 'Questionpaper.dart';
 import 'Sidenavbar.dart';
@@ -60,7 +61,7 @@ class _CurriculumListPageState extends State<CurriculumListPage> {
           padding: EdgeInsets.all(12.r),
           child: Obx(() {
             if (controller.isLoading.value) {
-              return const Center(child: CircularProgressIndicator());
+              return curriculumShimmer();
             }
 
             if (controller.exams.isEmpty) {
@@ -143,12 +144,10 @@ class _CurriculumListPageState extends State<CurriculumListPage> {
                                     SizedBox(
                                       width: Get.width / 2.5,
                                       child: ElevatedButton(
-                                        onPressed: () =>
-                                            Get.to(() =>  Keyanswer(
-                                                  examId: int.parse(
-                                                      exam['exam_id']
-                                                          .toString()), 
-                                                )),
+                                        onPressed: () => Get.to(() => Keyanswer(
+                                              examId: int.parse(
+                                                  exam['exam_id'].toString()),
+                                            )),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: kPrimaryColor,
                                           shape: RoundedRectangleBorder(
@@ -176,8 +175,12 @@ class _CurriculumListPageState extends State<CurriculumListPage> {
                                     SizedBox(
                                       width: Get.width / 2.5,
                                       child: ElevatedButton(
-                                        onPressed: () =>
-                                            Get.to(() => CurriculumScreen()),
+                                        onPressed: () => Get.to(
+                                          () => ViewresultScreen(
+                                            examId: int.parse(
+                                                exam['exam_id'].toString()),
+                                          ),
+                                        ),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: Colors.teal,
                                           shape: RoundedRectangleBorder(
@@ -235,4 +238,81 @@ class RowText extends StatelessWidget {
       ),
     );
   }
+}
+
+Widget curriculumShimmer() {
+  return ListView.builder(
+    itemCount: 4,
+    itemBuilder: (context, index) {
+      return Padding(
+        padding: EdgeInsets.only(bottom: 12.r),
+        child: linecontainer(
+          Padding(
+            padding: EdgeInsets.all(12.r),
+            child: Shimmer.fromColors(
+              baseColor: Colors.grey.shade300,
+              highlightColor: Colors.grey.shade100,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _shimmerRow(labelWidth: 120.r, height: 12.r),
+                  SizedBox(height: 8.r),
+                  _shimmerRow(labelWidth: 120.r, height: 12.r),
+                  SizedBox(height: 8.r),
+                  _shimmerRow(labelWidth: 120.r, height: 12.r),
+                  SizedBox(height: 8.r),
+                  _shimmerRow(labelWidth: 120.r, height: 12.r),
+                  SizedBox(height: 16.r),
+                  _shimmerButtonRow(),
+                  SizedBox(height: 12.r),
+                  _shimmerButtonRow(),
+                  SizedBox(height: 12.r),
+                  _shimmerButtonRow(),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+Widget _shimmerRow({required double labelWidth, required double height}) {
+  return Row(
+    children: [
+      Container(
+        width: labelWidth,
+        height: height,
+        color: Colors.white,
+      ),
+      const Spacer(),
+      Container(
+        width: 100.r,
+        height: height,
+        color: Colors.white,
+      ),
+    ],
+  );
+}
+
+Widget _shimmerButtonRow() {
+  return Row(
+    children: [
+      Container(
+        width: 120.r,
+        height: 12.r,
+        color: Colors.white,
+      ),
+      const Spacer(),
+      Container(
+        width: Get.width / 2.5,
+        height: 36.r,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8.r),
+        ),
+      ),
+    ],
+  );
 }

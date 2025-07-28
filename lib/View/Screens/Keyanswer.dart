@@ -74,7 +74,15 @@ class _KeyanswerState extends State<Keyanswer> {
               }
 
               if (keyanswerController.answers.isEmpty) {
-                return const Center(child: Text("No answers found"));
+                return const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(height: 350),
+                      Text("No answers found"),
+                    ],
+                  ),
+                );
               }
 
               return Expanded(

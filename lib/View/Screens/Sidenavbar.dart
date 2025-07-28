@@ -39,17 +39,17 @@ class SideNavbarDrawer extends StatelessWidget {
                 ),
                 SizedBox(height: 12.r),
                 Text(
-                  "Dr. NAVEEN BALAJI V",
+                  "",
                   style: AppTextStyles.subHeading.withColor(whiteColor),
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 6.r),
                 Text(
-                  "AVP2025009581",
+                  "",
                   style: AppTextStyles.body.withColor(whiteColor),
                 ),
                 Text(
-                  "PG NEET 009 Batch 2024 - 2026",
+                  "",
                   style: AppTextStyles.body.withColor(whiteColor),
                 ),
                 SizedBox(height: 30.r),

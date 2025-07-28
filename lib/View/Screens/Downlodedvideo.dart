@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:sakthiexports/Theme/Colors.dart';
+import 'package:sakthiexports/View/widgets/Shimmer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
@@ -49,6 +50,7 @@ class _DownloadedVideoListState extends State<DownloadedVideoList> {
     super.initState();
     _loadDownloadedVideos();
   }
+  
 
   Future<void> _loadDownloadedVideos() async {
     setState(() {
@@ -81,19 +83,23 @@ class _DownloadedVideoListState extends State<DownloadedVideoList> {
   }
 
   Future<File> _decryptFile(File encryptedFile) async {
-    final encryptedBytes = await encryptedFile.readAsBytes();
-
-    // compute only works with List<int>, not Uint8List
-    final decryptedBytes = await compute(aesDecrypt, encryptedBytes.toList());
-
-    final tempDir = await getTemporaryDirectory();
     final filename =
         encryptedFile.uri.pathSegments.last.replaceAll('.aes', '.mp4');
-    final tempFile = File('${tempDir.path}/$filename');
+    final tempDir = await getTemporaryDirectory();
+    final tempFilePath = '${tempDir.path}/$filename';
+    final tempFile = File(tempFilePath);
+
+    if (await tempFile.exists()) {
+      return tempFile;
+    }
+
+    final encryptedBytes = await encryptedFile.readAsBytes();
+    final decryptedBytes = await compute(aesDecrypt, encryptedBytes.toList());
 
     await tempFile.writeAsBytes(Uint8List.fromList(decryptedBytes));
     return tempFile;
   }
+
 
   Future<String?> _generateThumbnail(File encryptedFile) async {
     final pathKey = encryptedFile.path;
@@ -199,7 +205,7 @@ class _DownloadedVideoListState extends State<DownloadedVideoList> {
         title: Text('Downloaded Videos', style: AppTextStyles.heading),
       ),
       body: isLoading
-          ? _buildShimmerList()
+          ? const Shimmerload()
           : videoFiles.isEmpty
               ? Center(
                   child: Text('No downloaded videos found.',
@@ -317,91 +323,23 @@ class _DownloadedVideoListState extends State<DownloadedVideoList> {
   }
 }
 
-Widget _buildShimmerList() {
-  return ListView.builder(
-    itemCount: 4,
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    itemBuilder: (context, index) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: linecontainer(
-          Shimmer.fromColors(
-            baseColor: Colors.grey.shade300,
-            highlightColor: Colors.grey.shade100,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey[400],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
+// Future<File> _decryptPartialFile(File encryptedFile) async {
+//   final filename =
+//       encryptedFile.uri.pathSegments.last.replaceAll('.aes', '_preview.mp4');
+//   final tempDir = await getTemporaryDirectory();
+//   final tempFilePath = '${tempDir.path}/$filename';
+//   final tempFile = File(tempFilePath);
 
-                Container(
-                  height: 16,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[400],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                const SizedBox(height: 8),
+//   if (await tempFile.exists()) return tempFile;
 
-                Container(
-                  height: 14,
-                  width: Get.width * 0.7,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[400],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                const SizedBox(height: 8),
+//   final encryptedBytes = await encryptedFile.readAsBytes();
 
-                Row(
-                  children: [
-                    Container(
-                      height: 12,
-                      width: 80,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[400],
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Container(
-                      height: 12,
-                      width: 100,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[400],
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
+//   // ⚠️ Estimate: Decrypt first ~12MB (2 minutes at average bitrate)
+//   final int previewLength = 12 * 1024 * 1024; // 12MB
+//   final partialBytes = encryptedBytes.take(previewLength).toList();
 
-                // Button shimmer (Download / Play)
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Container(
-                    height: 36,
-                    width: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[400],
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    },
-  );
-}
+//   final decryptedBytes = await compute(aesDecrypt, partialBytes);
+//   await tempFile.writeAsBytes(Uint8List.fromList(decryptedBytes));
+
+//   return tempFile;
+// }

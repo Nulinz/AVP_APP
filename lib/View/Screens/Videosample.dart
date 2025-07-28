@@ -9,6 +9,7 @@ import 'package:sakthiexports/View/util/linecontainer.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:dio/dio.dart' as dio;
+import 'package:sakthiexports/View/widgets/Shimmer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
@@ -36,21 +37,36 @@ class _SampleVideoListPlayerState extends State<SampleVideoListPlayer> {
   }
 
   Future<void> _initControllerAndDownloads() async {
-    await videoController.loadProfileFromPrefs(); // fetches list
-    await _loadDownloadedVideos(); // loads local state
+    await videoController.loadProfileFromPrefs(); 
+    await _loadDownloadedVideos();
   }
 
   Future<void> _loadDownloadedVideos() async {
     final dir = await getApplicationDocumentsDirectory();
+    final prefs = await SharedPreferences.getInstance();
 
     for (int i = 0; i < videoController.videoList.length; i++) {
       final file = File('${dir.path}/video_$i.aes');
+
       if (await file.exists()) {
+        final expiry = videoController.videoList[i]['expiry_date'];
+        if (expiry != null) {
+          final expiryDate = DateTime.tryParse(expiry);
+          final now = DateTime.now();
+
+          if (expiryDate != null && expiryDate.isBefore(now)) {
+            await file.delete();
+            await prefs.remove('video_$i');
+            debugPrint("Deleted expired video_$i");
+            continue;
+          }
+        }
+
         decryptedVideoIndices.add(i);
       }
     }
 
-    debugPrint("Restored download state: $decryptedVideoIndices");
+    debugPrint("Restored valid download state: $decryptedVideoIndices");
     setState(() {});
   }
 
@@ -348,7 +364,7 @@ class _SampleVideoListPlayerState extends State<SampleVideoListPlayer> {
       ),
       body: Obx(() {
         if (videoController.isLoading.value) {
-          return _buildShimmerList();
+          return const Shimmerload();
         }
 
         if (!videoController.isFetchCompleted.value) {
@@ -563,93 +579,4 @@ class _SampleVideoListPlayerState extends State<SampleVideoListPlayer> {
       }),
     );
   }
-}
-
-Widget _buildShimmerList() {
-  return ListView.builder(
-    itemCount: 4,
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    itemBuilder: (context, index) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: linecontainer(
-          Shimmer.fromColors(
-            baseColor: Colors.grey.shade300,
-            highlightColor: Colors.grey.shade100,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey[400],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                Container(
-                  height: 16,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[400],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                Container(
-                  height: 14,
-                  width: Get.width * 0.7,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[400],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                Row(
-                  children: [
-                    Container(
-                      height: 12,
-                      width: 80,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[400],
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Container(
-                      height: 12,
-                      width: 100,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[400],
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                // Button shimmer (Download / Play)
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Container(
-                    height: 36,
-                    width: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[400],
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    },
-  );
 }

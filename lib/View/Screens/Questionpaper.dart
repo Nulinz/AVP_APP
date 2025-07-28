@@ -7,7 +7,7 @@ import 'package:sakthiexports/View/util/linecontainer.dart';
 import 'package:sakthiexports/View/Screens/Sidenavbar.dart';
 
 class Questionpaper extends StatefulWidget {
-    final int examId;
+  final int examId;
 
   const Questionpaper({super.key, required this.examId});
 
@@ -22,13 +22,12 @@ class _QuestionpaperState extends State<Questionpaper> {
   @override
   void initState() {
     super.initState();
-    qController.fetchQuestions(examId:  widget.examId);
+    qController.fetchQuestions(examId: widget.examId);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
       backgroundColor: const Color.fromARGB(255, 221, 215, 244),
       drawer: Drawer(
         width: MediaQuery.of(context).size.width * 0.8,
