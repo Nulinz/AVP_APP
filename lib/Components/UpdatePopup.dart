@@ -101,7 +101,7 @@ class _UpdatepopupState extends State<Updatepopup> {
                                 onPressed: () {
                                   launchUrl(
                                       Uri.parse(
-                                          "https://play.google.com/store/apps/details?id=com.magarantham.customer"),
+                                          "https://play.google.com/store/apps/details?id=com.nulinz.avpacademy"),
                                       mode: LaunchMode.platformDefault);
                                 },
                                 child: const Text(

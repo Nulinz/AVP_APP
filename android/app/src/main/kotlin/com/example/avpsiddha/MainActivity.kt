@@ -1,4 +1,4 @@
-package com.example.avpsiddha
+package com.nulinz.avpacademy
 
 import io.flutter.embedding.android.FlutterActivity
 
