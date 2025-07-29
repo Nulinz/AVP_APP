@@ -57,7 +57,7 @@ class _NotificationscreenState extends State<Notificationscreen> {
           ],
         ),
         body: Padding(
-          padding: EdgeInsets.all(12.r),
+          padding: EdgeInsets.all(2.r),
           child: Obx(() {
             if (controller.isLoading.value) {
               return const Center(
@@ -89,7 +89,7 @@ Widget buildTopUpdateSection(List<Map<String, String>> notifications) {
       children: [
         Expanded(
           child: Padding(
-            padding: EdgeInsets.all(8.r),
+            padding: EdgeInsets.all(2.r),
             child: ListView.builder(
               itemCount: notifications.length,
               itemBuilder: (context, index) {

@@ -25,21 +25,24 @@ class CurriculumDashboard extends StatefulWidget {
 }
 
 class _CurriculumDashboardState extends State<CurriculumDashboard> {
+  String marqueeText = '';
+  bool isLoadingMarquee = true;
+
   final ExamController examController = Get.put(ExamController());
   final DashboardController controller = Get.put(DashboardController());
 
   double _opacity = 1.0;
   late Timer _timer;
-  final List<Map<String, String>> notifications = [
-    {
-      "title": "Model Test",
-      "description": "009 Batch 13.07.2025 (Sunday) Test portion Test portion",
-    },
-  ];
+
   @override
   void initState() {
     super.initState();
+
     controller.fetchScheduleForToday();
+    controller.fetchNotificationData();
+    controller.loadLastExam();
+    controller.loadMarqueeText();
+
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         _opacity = _opacity == 1.0 ? 0.0 : 1.0;
@@ -55,11 +58,17 @@ class _CurriculumDashboardState extends State<CurriculumDashboard> {
 
   Future<void> _refreshData() async {
     await examController.fetchExams();
+    controller.fetchScheduleForToday();
+    controller.fetchNotificationData();
+    controller.loadLastExam();
+    controller.loadMarqueeText();
+    examController.fetchExams();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 221, 215, 244),
       drawer: Drawer(
         width: Get.width * 0.8,
         child: SideNavbarDrawer(),
@@ -92,21 +101,24 @@ class _CurriculumDashboardState extends State<CurriculumDashboard> {
       ),
       body: SafeArea(
         child: Container(
-          color: const Color.fromARGB(255, 221, 215, 244),
           child: RefreshIndicator(
             onRefresh: _refreshData,
             child: SingleChildScrollView(
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      height: 40.r,
-                      width: double.infinity,
-                      color: Colors.white,
-                      child: buildMarqueeText(
-                        ' Welcome to AVP Siddha Academy! Please follow the instructions before starting the test.',
-                      ),
-                    ),
+                    Obx(() => Container(
+                          height: 40.r,
+                          width: double.infinity,
+                          color: Colors.white,
+                          padding: EdgeInsets.symmetric(horizontal: 10.w),
+                          child: controller.isLoadingMarquee.value
+                              ? const SizedBox() // You can put a loader if needed
+                              : controller.marqueeText.value.trim().isNotEmpty
+                                  ? buildMarqueeText(
+                                      controller.marqueeText.value)
+                                  : const SizedBox(),
+                        )),
                     SizedBox(height: 10.r),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 18.r),
@@ -194,26 +206,47 @@ class _CurriculumDashboardState extends State<CurriculumDashboard> {
                         child: linecontainer(
                           Padding(
                             padding: EdgeInsets.all(12.r),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(height: 10.r),
-                                Padding(
-                                  padding: EdgeInsets.all(8.r),
-                                  child: Text("Model Test ",
-                                      style: AppTextStyles.subHeading
-                                          .withColor(blackColor)),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.all(8.r),
-                                  child: Text(
-                                      "009 Batch  13.07.2025 (Sunday) Test portion Test portion ",
-                                      style: AppTextStyles.small
-                                          .withColor(blackColor)),
-                                ),
-                                SizedBox(height: 12.r),
-                              ],
-                            ),
+                            child: Obx(() {
+                              final notifications = controller.notificationList;
+
+                              if (notifications.isEmpty) {
+                                return const Center(
+                                    child: Text("No notification available"));
+                              }
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(height: 10.r),
+                                  ...notifications.map((notification) => Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Padding(
+                                            padding: EdgeInsets.all(8.r),
+                                            child: Text(
+                                              notification["title"] ?? '',
+                                              style: AppTextStyles.subHeading
+                                                  .withColor(blackColor),
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding: EdgeInsets.all(8.r),
+                                            child: Text(
+                                              (notification["description"] ??
+                                                      '')
+                                                  .replaceAll("\\r\\n", "\n")
+                                                  .replaceAll(r'\n', '\n'),
+                                              style: AppTextStyles.small
+                                                  .withColor(blackColor),
+                                            ),
+                                          ),
+                                        ],
+                                      )),
+                                  SizedBox(height: 12.r),
+                                ],
+                              );
+                            }),
                           ),
                         ),
                       ),
@@ -221,7 +254,10 @@ class _CurriculumDashboardState extends State<CurriculumDashboard> {
                     SizedBox(height: 2.r),
                     Obx(() {
                       if (examController.isLoading.value) {
-                        return const Center(child: CircularProgressIndicator());
+                        return const Center(
+                            child: CircularProgressIndicator(
+                          color: kPrimaryColor,
+                        ));
                       }
 
                       if (examController.exams.isEmpty) {
@@ -245,7 +281,9 @@ class _CurriculumDashboardState extends State<CurriculumDashboard> {
                             canStart: canStart,
                             onTap: () {
                               if (canStart) {
-                                Get.to(() =>  Testcard(examid: exam['exam_id'],))?.then((_) {
+                                Get.to(() => Testcard(
+                                      examid: exam['exam_id'],
+                                    ))?.then((_) {
                                   _refreshData();
                                 });
                               } else {
@@ -272,29 +310,37 @@ class _CurriculumDashboardState extends State<CurriculumDashboard> {
                     SizedBox(height: 10.r),
                     Obx(() {
                       // if (controller.isScheduleLoading.value) {
-                      //   return const Center(child: CircularProgressIndicator());
+                      //   return const Center(
+                      //       child: CircularProgressIndicator(
+                      //     color: kPrimaryColor,
+                      //   ));
                       // }
-
-                      if (controller.scheduleSubjects.isEmpty) {
-                        return Padding(
-                          padding: EdgeInsets.all(16.r),
-                          child: Text("No schedule for today.",
-                              style: AppTextStyles.body),
-                        );
-                      }
-
                       return buildExamScheduleCard(
                         scheduleDate: controller.scheduleDate.value,
                         subjects: controller.scheduleSubjects,
                       );
                     }),
                     SizedBox(height: 20.r),
-                    buildModelTestCard(
-                      title: "Model Test - 1 (06.07.2025)",
-                      onViewResult: () {
-                        // Get.to(() => ViewresultScreen(examId:exam['exam_id'].toString()));
-                      },
-                    )
+                    Obx(() {
+                      // if (controller.isLastExamLoading.value) {
+                      //   return const Center(
+                      //       child: CircularProgressIndicator(
+                      //     color: kPrimaryColor,
+                      //   ));
+                      // }
+
+                      if (controller.hasLastExam.value) {
+                        return buildModelTestCard(
+                          title: "${controller.lastExamTitle.value} ",
+                          onViewResult: () {
+                            Get.to(() => ViewresultScreen(
+                                examId: controller.lastExamId.value));
+                          },
+                        );
+                      } else {
+                        return const SizedBox();
+                      }
+                    }),
                   ]),
             ),
           ),
@@ -399,6 +445,8 @@ Widget buildExamScheduleCard({
                   ],
                 ),
                 SizedBox(height: 12.r),
+
+                // Table Header
                 Container(
                   padding:
                       EdgeInsets.symmetric(vertical: 8.r, horizontal: 12.r),
@@ -423,38 +471,53 @@ Widget buildExamScheduleCard({
                   ),
                 ),
                 const Divider(),
-                ...subjects.asMap().entries.map((entry) {
-                  final index = entry.key + 1;
-                  final subject = entry.value;
-                  return Padding(
-                    padding: EdgeInsets.only(bottom: 8.r),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: Text("$index",
-                              style: AppTextStyles.small.withColor(blackColor)),
-                        ),
-                        SizedBox(width: 80.r),
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            subject['subject'] ?? '',
-                            style: AppTextStyles.small.withColor(blackColor),
-                          ),
-                        ),
-                        SizedBox(width: 10.r),
-                        Expanded(
-                          flex: 5,
-                          child: Text(
-                            "${subject['videoTitle'] ?? ''}, ${subject['description'] ?? ''}",
-                            style: AppTextStyles.small.withColor(blackColor),
-                          ),
-                        ),
-                      ],
+
+                // If subjects empty, show message inside card
+                if (subjects.isEmpty)
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16.r),
+                    child: Center(
+                      child: Text(
+                        "No schedule for today.",
+                        style: AppTextStyles.body,
+                      ),
                     ),
-                  );
-                }),
+                  )
+                else
+                  ...subjects.asMap().entries.map((entry) {
+                    final index = entry.key + 1;
+                    final subject = entry.value;
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 8.r),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 1,
+                            child: Text(
+                              "$index",
+                              style: AppTextStyles.small.withColor(blackColor),
+                            ),
+                          ),
+                          SizedBox(width: 80.r),
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              subject['subject'] ?? '',
+                              style: AppTextStyles.small.withColor(blackColor),
+                            ),
+                          ),
+                          SizedBox(width: 10.r),
+                          Expanded(
+                            flex: 5,
+                            child: Text(
+                              "${subject['videoTitle'] ?? ''}, ${subject['description'] ?? ''}",
+                              style: AppTextStyles.small.withColor(blackColor),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
               ],
             ),
           ),
@@ -537,9 +600,14 @@ Widget buildModelTestCard({
           children: [
             Padding(
               padding: EdgeInsets.all(8.r),
-              child: Text(
-                title,
-                style: AppTextStyles.subHeading.withColor(whiteColor),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTextStyles.subHeading.withColor(whiteColor),
+                  ),
+                ],
               ),
             ),
             SizedBox(height: 12.r),

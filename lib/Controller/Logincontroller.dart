@@ -32,7 +32,8 @@ class Logincontroller extends GetxController {
 
       print("Login Response: $response");
 
-      if (response["message"] == "Login successfully") {
+      if (response["message"] == "Login successfully" &&
+          (response["enrollment_no"] ?? '').isNotEmpty) {
         if (response["device_name"] != deviceName.value) {
           CustomSnackbar(
               "Access Denied", "This account is registered to another device.");
@@ -42,8 +43,13 @@ class Logincontroller extends GetxController {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString("enrollment_no", response["enrollment_no"] ?? '');
         await prefs.setString("device_name", response["device_name"] ?? '');
+        await prefs.setString("student_name", response["student_name"] ?? '');
+        await prefs.setString("batch_name", response["batch_name"] ?? '');
+
         print("Longinpage enrollmentno: ${response["enrollment_no"]}");
         print("Loginpage devicename: ${response["device_name"]}");
+        print("Loginpage studentName: ${response["student_name"]}");
+        print("Loginpage batchname: ${response["batch_name"]}");
         phonecontroller.clear();
         passwordcontroller.clear();
         CustomSnackbar("Success", "Login successful");
