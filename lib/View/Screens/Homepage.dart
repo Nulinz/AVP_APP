@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:marquee/marquee.dart';
+import 'package:sakthiexports/Controller/Dashboardcontroller.dart';
 import 'package:sakthiexports/Theme/Colors.dart';
 import 'package:get/get.dart';
 import 'package:sakthiexports/View/Screens/Testcard.dart';
@@ -25,6 +26,7 @@ class CurriculumDashboard extends StatefulWidget {
 
 class _CurriculumDashboardState extends State<CurriculumDashboard> {
   final ExamController examController = Get.put(ExamController());
+  final DashboardController controller = Get.put(DashboardController());
 
   double _opacity = 1.0;
   late Timer _timer;
@@ -37,6 +39,7 @@ class _CurriculumDashboardState extends State<CurriculumDashboard> {
   @override
   void initState() {
     super.initState();
+    controller.fetchScheduleForToday();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         _opacity = _opacity == 1.0 ? 0.0 : 1.0;
@@ -267,16 +270,24 @@ class _CurriculumDashboardState extends State<CurriculumDashboard> {
                       );
                     }),
                     SizedBox(height: 10.r),
-                    buildExamScheduleCard(
-                      scheduleDate: "13.07.2025",
-                      subjects: [
-                        {"subject": "Biology", "description": "Full Syllabus"},
-                        {
-                          "subject": "Physics",
-                          "description": "Chapters 1 to 4"
-                        },
-                      ],
-                    ),
+                    Obx(() {
+                      // if (controller.isScheduleLoading.value) {
+                      //   return const Center(child: CircularProgressIndicator());
+                      // }
+
+                      if (controller.scheduleSubjects.isEmpty) {
+                        return Padding(
+                          padding: EdgeInsets.all(16.r),
+                          child: Text("No schedule for today.",
+                              style: AppTextStyles.body),
+                        );
+                      }
+
+                      return buildExamScheduleCard(
+                        scheduleDate: controller.scheduleDate.value,
+                        subjects: controller.scheduleSubjects,
+                      );
+                    }),
                     SizedBox(height: 20.r),
                     buildModelTestCard(
                       title: "Model Test - 1 (06.07.2025)",
@@ -436,7 +447,7 @@ Widget buildExamScheduleCard({
                         Expanded(
                           flex: 5,
                           child: Text(
-                            subject['description'] ?? '',
+                            "${subject['videoTitle'] ?? ''}, ${subject['description'] ?? ''}",
                             style: AppTextStyles.small.withColor(blackColor),
                           ),
                         ),
