@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sakthiexports/Theme/Fonts.dart';
 
 class ErrorScreen extends StatelessWidget {
   final String errorMessage;
@@ -26,6 +27,11 @@ class ErrorScreen extends StatelessWidget {
               child: const Image(
                 image: AssetImage("assets/images/404_error.png"),
               ),
+            ),
+            Text(
+              'Server Not Responding',
+              //  \n $errorMessage',
+              style: AppTextStyles.subHeading.withColor(Colors.grey),
             ),
             Text(
               "Dear User !\nSomething Went wrong\n Kindly Try After Sometime!",
