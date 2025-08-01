@@ -50,12 +50,12 @@ class _DownloadedVideoListState extends State<DownloadedVideoList> {
     super.initState();
     _loadDownloadedVideos();
   }
-  
 
   Future<void> _loadDownloadedVideos() async {
     setState(() {
       isLoading = true;
     });
+
     await Future.delayed(const Duration(seconds: 3));
     final dir = await getApplicationDocumentsDirectory();
     final files = dir.listSync();
@@ -63,20 +63,45 @@ class _DownloadedVideoListState extends State<DownloadedVideoList> {
 
     final prefs = await SharedPreferences.getInstance();
     final metadataMap = <String, Map<String, String>>{};
+    final validVideoFiles = <FileSystemEntity>[];
 
     for (var file in aesFiles) {
       final filename = file.path.split('/').last.replaceAll('.aes', '');
       final title = prefs.getString('$filename.title') ?? filename;
       final description = prefs.getString('$filename.description') ??
           'No description available';
+
+      // Get download date and check for expiration
+      final downloadDateStr = prefs.getString('$filename.downloadDate');
+      if (downloadDateStr != null) {
+        final downloadDate = DateTime.tryParse(downloadDateStr);
+        if (downloadDate != null) {
+          final expiryDate = downloadDate.add(const Duration(days: 7));
+          // final staticExpiryDate = DateTime.parse('2024-08-01');
+
+          print('expired date:$expiryDate');
+          print('DELETED: $filename');
+
+          if (DateTime.now().isAfter(expiryDate)) {
+            // Delete expired file and continue to next one
+            await File(file.path).delete();
+            prefs.remove('$filename.title');
+            prefs.remove('$filename.description');
+            prefs.remove('$filename.downloadDate');
+            continue;
+          }
+        }
+      }
+
       metadataMap[filename] = {
         'title': title,
         'description': description,
       };
+      validVideoFiles.add(file);
     }
 
     setState(() {
-      videoFiles = aesFiles;
+      videoFiles = validVideoFiles;
       downloadedVideoMetadata = metadataMap;
       isLoading = false;
     });
@@ -100,39 +125,38 @@ class _DownloadedVideoListState extends State<DownloadedVideoList> {
     return tempFile;
   }
 
+  // Future<String?> _generateThumbnail(File encryptedFile) async {
+  //   final pathKey = encryptedFile.path;
+  //   if (thumbnailCache.containsKey(pathKey)) {
+  //     return thumbnailCache[pathKey];
+  //   }
 
-  Future<String?> _generateThumbnail(File encryptedFile) async {
-    final pathKey = encryptedFile.path;
-    if (thumbnailCache.containsKey(pathKey)) {
-      return thumbnailCache[pathKey];
-    }
+  //   try {
+  //     final decryptedFile = await _decryptFile(encryptedFile);
 
-    try {
-      final decryptedFile = await _decryptFile(encryptedFile);
+  //     final thumbnailDir = await getApplicationDocumentsDirectory();
+  //     final thumbnailPath = '${thumbnailDir.path}/${pathKey.hashCode}.jpg';
 
-      final thumbnailDir = await getApplicationDocumentsDirectory();
-      final thumbnailPath = '${thumbnailDir.path}/${pathKey.hashCode}.jpg';
+  //     if (File(thumbnailPath).existsSync()) {
+  //       thumbnailCache[pathKey] = thumbnailPath;
+  //       return thumbnailPath;
+  //     }
 
-      if (File(thumbnailPath).existsSync()) {
-        thumbnailCache[pathKey] = thumbnailPath;
-        return thumbnailPath;
-      }
+  //     final generated = await VideoThumbnail.thumbnailFile(
+  //       video: decryptedFile.path,
+  //       thumbnailPath: thumbnailPath,
+  //       imageFormat: ImageFormat.JPEG,
+  //       maxHeight: 120,
+  //       quality: 75,
+  //     );
 
-      final generated = await VideoThumbnail.thumbnailFile(
-        video: decryptedFile.path,
-        thumbnailPath: thumbnailPath,
-        imageFormat: ImageFormat.JPEG,
-        maxHeight: 120,
-        quality: 75,
-      );
-
-      thumbnailCache[pathKey] = generated;
-      return generated;
-    } catch (e) {
-      debugPrint('Thumbnail generation failed: $e');
-      return null;
-    }
-  }
+  //     thumbnailCache[pathKey] = generated;
+  //     return generated;
+  //   } catch (e) {
+  //     debugPrint('Thumbnail generation failed: $e');
+  //     return null;
+  //   }
+  // }
 
   void _playDecryptedVideo(File encryptedFile) async {
     showDialog(
@@ -245,27 +269,12 @@ class _DownloadedVideoListState extends State<DownloadedVideoList> {
                                     aspectRatio: 16 / 9,
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(10.r),
-                                      child: FutureBuilder<String?>(
-                                        future:
-                                            _generateThumbnail(File(file.path)),
-                                        builder: (context, snapshot) {
-                                          if (snapshot.connectionState ==
-                                                  ConnectionState.done &&
-                                              snapshot.hasData &&
-                                              snapshot.data != null) {
-                                            return Image.file(
-                                              File(snapshot.data!),
-                                              fit: BoxFit.cover,
-                                            );
-                                          } else {
-                                            return Container(
-                                              color: Colors.grey[300],
-                                              child: const Center(
-                                                  child:
-                                                      CircularProgressIndicator()),
-                                            );
-                                          }
-                                        },
+                                      child: Container(
+                                        color: Colors.black12,
+                                        child: const Center(
+                                          child: Icon(Icons.videocam,
+                                              size: 60, color: Colors.grey),
+                                        ),
                                       ),
                                     ),
                                   ),

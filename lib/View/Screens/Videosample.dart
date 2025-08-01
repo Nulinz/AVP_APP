@@ -37,7 +37,7 @@ class _SampleVideoListPlayerState extends State<SampleVideoListPlayer> {
   }
 
   Future<void> _initControllerAndDownloads() async {
-    await videoController.loadProfileFromPrefs(); 
+    await videoController.loadProfileFromPrefs();
     await _loadDownloadedVideos();
   }
 
@@ -122,115 +122,121 @@ class _SampleVideoListPlayerState extends State<SampleVideoListPlayer> {
   Future<void> showDownloadProgressDialog(
     BuildContext context,
     ValueNotifier<double> progress,
-    ValueNotifier<int> totalBytes,
+    ValueNotifier<String> progressText,
   ) async {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              titlePadding: const EdgeInsets.only(left: 16, right: 8, top: 8),
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text("Downloading..."),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () async {
-                      final shouldCancel = await showDialog<bool>(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text("Cancel Download"),
-                            content: const Text(
-                              "Are you sure you want to cancel the download?",
+        return AlertDialog(
+          titlePadding: const EdgeInsets.only(left: 16, right: 8, top: 8),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Downloading..."),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () async {
+                  final shouldCancel = await showDialog<bool>(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text("Cancel Download"),
+                        content: const Text(
+                            "Are you sure you want to cancel the download?"),
+                        actions: [
+                          ElevatedButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
                             ),
-                            actions: [
-                              ElevatedButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(false),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: kPrimaryColor,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10)),
-                                ),
-                                child: const Text("Continue"),
-                              ),
-                              ElevatedButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(true),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.redAccent,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10)),
-                                ),
-                                child: const Text("Cancel"),
-                              ),
-                            ],
-                          );
-                        },
+                            child: const Text("Continue"),
+                          ),
+                          ElevatedButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.redAccent,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                            ),
+                            child: const Text("Cancel"),
+                          ),
+                        ],
                       );
-
-                      if (shouldCancel == true) {
-                        Navigator.of(dialogContext).pop();
-                      }
                     },
-                  ),
-                ],
-              ),
-              content: ValueListenableBuilder<double>(
-                valueListenable: progress,
-                builder: (context, value, _) {
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      LinearProgressIndicator(value: value),
-                      const SizedBox(height: 12),
-                      ValueListenableBuilder<int>(
-                        valueListenable: totalBytes,
-                        builder: (context, bytes, _) {
-                          final kb = (bytes / 1024).toStringAsFixed(2);
-                          final mb = (bytes / (1024 * 1024)).toStringAsFixed(2);
-                          return Text("Downloaded: $kb KB ($mb MB)");
-                        },
-                      ),
-                    ],
                   );
+
+                  if (shouldCancel == true) {
+                    Navigator.of(dialogContext).pop();
+                  }
                 },
               ),
-            );
-          },
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ValueListenableBuilder<double>(
+                valueListenable: progress,
+                builder: (context, value, _) =>
+                    LinearProgressIndicator(value: value),
+              ),
+              const SizedBox(height: 8),
+              ValueListenableBuilder<String>(
+                valueListenable: progressText,
+                builder: (context, value, _) => Text(value),
+              ),
+            ],
+          ),
         );
       },
     );
   }
 
-  Future<bool> downloadAndEncryptVideo(BuildContext context, String url,
-      String filename, int index, title, description) async {
+  Future<bool> downloadAndEncryptVideo(
+    BuildContext context,
+    String url,
+    String filename,
+    int index,
+    String title,
+    String description,
+  ) async {
+    final progress = ValueNotifier<double>(0.0);
+    final progressText = ValueNotifier<String>(
+      "Downloading: 0.0% (0.0 MB / 0.0 MB)",
+    );
+
     try {
-      ValueNotifier<double> progress = ValueNotifier(0.0);
-      ValueNotifier<int> totalBytes = ValueNotifier(0);
-      await showDownloadProgressDialog(context, progress, totalBytes);
+      await showDownloadProgressDialog(context, progress, progressText);
 
       final response = await dio.Dio().get<List<int>>(
         url,
         options: dio.Options(responseType: dio.ResponseType.bytes),
         onReceiveProgress: (received, total) {
-          if (total != -1) {
-            progress.value = received / total;
-            totalBytes.value = received;
+          if (total > 0) {
+            double percent = (received / total);
+            progress.value = percent;
+
+            double receivedMb = received / (1024 * 1024);
+            double totalMb = total / (1024 * 1024);
+            progressText.value =
+                "Downloading: ${(percent * 100).toStringAsFixed(1)}% "
+                "(${receivedMb.toStringAsFixed(1)} MB / ${totalMb.toStringAsFixed(1)} MB)";
           }
         },
       );
-      Navigator.pop(context);
+
+      if (Navigator.canPop(context)) Navigator.pop(context);
       if (response.data == null) throw Exception("No data received");
 
+      // Encrypt
       final key = encrypt.Key.fromUtf8('32charslongencryptionkey12345678');
       final iv = encrypt.IV.fromUtf8('1234567890abcdef');
-      final encrypter =
-          encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.cbc));
+      final encrypter = encrypt.Encrypter(
+        encrypt.AES(key, mode: encrypt.AESMode.cbc),
+      );
 
       final encrypted = encrypter.encryptBytes(response.data!, iv: iv);
       final dir = await getApplicationDocumentsDirectory();
@@ -239,27 +245,30 @@ class _SampleVideoListPlayerState extends State<SampleVideoListPlayer> {
 
       debugPrint("Downloaded and encrypted: ${file.path}");
 
+      // Save metadata and download date
       final prefs = await SharedPreferences.getInstance();
-      final title = videoController.videoList[index]['title'] ?? '';
-      final description = videoController.videoList[index]['description'] ?? '';
-
       await prefs.setString(
         filename,
         jsonEncode({'title': title, 'description': description}),
       );
+      await prefs.setString(
+        '$filename.downloadDate',
+        DateTime.now().toIso8601String(),
+      );
 
       debugPrint("Metadata stored for $filename");
 
-      setState(() {
-        decryptedVideoIndices.add(index);
-      });
-      await Future.delayed(const Duration(milliseconds: 300));
-      await _loadDownloadedVideos();
+      if (context.mounted) {
+        setState(() {
+          decryptedVideoIndices.add(index); // Ensure this exists in your state
+        });
+        await _loadDownloadedVideos(); // Refresh UI
+      }
 
       return true;
     } catch (e) {
-      Navigator.pop(context);
-      debugPrint("Error during download or encryption: $e");
+      if (Navigator.canPop(context)) Navigator.pop(context);
+      debugPrint("Download/encryption error: $e");
       return false;
     }
   }
