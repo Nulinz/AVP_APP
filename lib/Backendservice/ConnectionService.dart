@@ -4,7 +4,6 @@ class ConnectionService {
   // static var base_url = "http://192.168.29.111:8000/app/api";
 
   static var update_popup = "$base_url/fetch.php";
-  
 
   static var login = "$base_url/fetch.php";
   static var logout = "$base_url/logout";
