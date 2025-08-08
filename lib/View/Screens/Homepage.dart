@@ -100,249 +100,230 @@ class _CurriculumDashboardState extends State<CurriculumDashboard> {
         ],
       ),
       body: SafeArea(
-        child: Container(
-          child: RefreshIndicator(
-            onRefresh: _refreshData,
-            child: SingleChildScrollView(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: RefreshIndicator(
+          onRefresh: _refreshData,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: [
+              Obx(() => Container(
+                    height: 40.r,
+                    width: double.infinity,
+                    color: Colors.white,
+                    padding: EdgeInsets.symmetric(horizontal: 10.w),
+                    child: controller.isLoadingMarquee.value
+                        ? const SizedBox()
+                        : controller.marqueeText.value.trim().isNotEmpty
+                            ? buildMarqueeText(controller.marqueeText.value)
+                            : const SizedBox(),
+                  )),
+              SizedBox(height: 10.r),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 18.r),
+                child: Text("Curriculum:", style: AppTextStyles.body),
+              ),
+              const SizedBox(height: 4),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10.r),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    Obx(() => Container(
-                          height: 40.r,
-                          width: double.infinity,
-                          color: Colors.white,
-                          padding: EdgeInsets.symmetric(horizontal: 10.w),
-                          child: controller.isLoadingMarquee.value
-                              ? const SizedBox() // You can put a loader if needed
-                              : controller.marqueeText.value.trim().isNotEmpty
-                                  ? buildMarqueeText(
-                                      controller.marqueeText.value)
-                                  : const SizedBox(),
-                        )),
-                    SizedBox(height: 10.r),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 18.r),
-                      child: Text("Curriculum:", style: AppTextStyles.body),
+                    DashboardCard(
+                        icon: Image.asset('assets/Icons/Question.png'),
+                        label: "Q & A Keys",
+                        onTap: () {
+                          Get.to(() => const CurriculumListPage());
+                        }),
+                    const SizedBox(width: 5),
+                    DashboardCard(
+                      icon: Image.asset('assets/Icons/student.png'),
+                      label: "My Profile",
+                      onTap: () {
+                        Get.to(() => const ProfileScreen());
+                      },
                     ),
-                    const SizedBox(height: 4),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10.r),
+                    SizedBox(width: 5.r),
+                    DashboardCard(
+                      icon: Image.asset('assets/Icons/Video.png'),
+                      label: "Videos",
+                      onTap: () {
+                        Get.to(() => const SampleVideoListPlayer());
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 10.r),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.all(8.r),
+                    child: AnimatedOpacity(
+                      opacity: _opacity,
+                      duration: const Duration(milliseconds: 500),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          DashboardCard(
-                              icon: Image.asset('assets/Icons/Question.png'),
-                              label: "Q & A Keys",
-                              onTap: () {
-                                Get.to(() => const CurriculumListPage());
-                              }),
-                          const SizedBox(width: 5),
-                          DashboardCard(
-                            icon: Image.asset('assets/Icons/student.png'),
-                            label: "My Profile",
-                            onTap: () {
-                              Get.to(() => const ProfileScreen());
-                            },
-                          ),
-                          SizedBox(width: 5.r),
-                          DashboardCard(
-                            icon: Image.asset('assets/Icons/Video.png'),
-                            label: "Videos",
-                            onTap: () {
-                              Get.to(() => const SampleVideoListPlayer());
-                            },
+                          const Icon(Icons.notifications_active,
+                              color: Colors.red),
+                          SizedBox(width: 8.r),
+                          Text(
+                            "Updates:",
+                            style: AppTextStyles.body,
                           ),
                         ],
                       ),
                     ),
-                    SizedBox(height: 10.r),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.all(8.r),
-                          child: AnimatedOpacity(
-                            opacity: _opacity,
-                            duration: const Duration(milliseconds: 500),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.notifications_active,
-                                    color: Colors.red),
-                                SizedBox(width: 8.r),
-                                Text(
-                                  "Updates:",
-                                  style: AppTextStyles.body,
-                                ),
-                              ],
-                            ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(8.r),
+                    child: IconButton(
+                      onPressed: () {
+                        Get.to(() => const Notificationscreen());
+                      },
+                      icon: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            "View All",
+                            style: AppTextStyles.body,
                           ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.all(8.r),
-                          child: IconButton(
-                            onPressed: () {
-                              Get.to(() => const Notificationscreen());
-                            },
-                            icon: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  "View All",
-                                  style: AppTextStyles.body,
-                                ),
-                                SizedBox(width: 4.r),
-                                Icon(Icons.arrow_forward_outlined,
-                                    size: 14.r, color: kPrimaryColor),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Padding(
-                      padding: EdgeInsets.all(8.r),
-                      child: SizedBox(
-                        width: 350,
-                        child: linecontainer(
-                          Padding(
-                            padding: EdgeInsets.all(12.r),
-                            child: Obx(() {
-                              final notifications = controller.notificationList;
-
-                              if (notifications.isEmpty) {
-                                return const Center(
-                                    child: Text("No notification available"));
-                              }
-
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SizedBox(height: 10.r),
-                                  ...notifications.map((notification) => Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Padding(
-                                            padding: EdgeInsets.all(8.r),
-                                            child: Text(
-                                              notification["title"] ?? '',
-                                              style: AppTextStyles.subHeading
-                                                  .withColor(blackColor),
-                                            ),
-                                          ),
-                                          Padding(
-                                            padding: EdgeInsets.all(8.r),
-                                            child: Text(
-                                              (notification["description"] ??
-                                                      '')
-                                                  .replaceAll("\\r\\n", "\n")
-                                                  .replaceAll(r'\n', '\n'),
-                                              style: AppTextStyles.small
-                                                  .withColor(blackColor),
-                                            ),
-                                          ),
-                                        ],
-                                      )),
-                                  SizedBox(height: 12.r),
-                                ],
-                              );
-                            }),
-                          ),
-                        ),
+                          SizedBox(width: 4.r),
+                          Icon(Icons.arrow_forward_outlined,
+                              size: 14.r, color: kPrimaryColor),
+                        ],
                       ),
                     ),
-                    SizedBox(height: 2.r),
-                    Obx(() {
-                      if (examController.isLoading.value) {
-                        return const Center(
-                            child: CircularProgressIndicator(
-                          color: kPrimaryColor,
-                        ));
-                      }
+                  ),
+                ],
+              ),
+              Padding(
+                padding: EdgeInsets.all(8.r),
+                child: SizedBox(
+                  width: 350,
+                  child: linecontainer(
+                    Padding(
+                      padding: EdgeInsets.all(12.r),
+                      child: Obx(() {
+                        final notifications = controller.notificationList;
 
-                      if (examController.exams.isEmpty) {
-                        return buildSubjectCard(
-                          title: 'Subject of Exam:',
-                          canStart: false,
-                          onTap: () {},
-                          message: 'No exams available.',
+                        if (notifications.isEmpty) {
+                          return const Center(
+                              child: Text("No notification available"));
+                        }
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: 10.r),
+                            ...notifications.map((notification) => Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: EdgeInsets.all(8.r),
+                                      child: Text(
+                                        notification["title"] ?? '',
+                                        style: AppTextStyles.subHeading
+                                            .withColor(blackColor),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.all(8.r),
+                                      child: Text(
+                                        (notification["description"] ?? '')
+                                            .replaceAll("\\r\\n", "\n")
+                                            .replaceAll(r'\n', '\n'),
+                                        style: AppTextStyles.small
+                                            .withColor(blackColor),
+                                      ),
+                                    ),
+                                  ],
+                                )),
+                            SizedBox(height: 12.r),
+                          ],
                         );
-                      }
+                      }),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 2.r),
+              Obx(() {
+                if (examController.isLoading.value) {
+                  return const Center(
+                      child: CircularProgressIndicator(
+                    color: kPrimaryColor,
+                  ));
+                }
 
-                      return Column(
-                        children: examController.exams.map((exam) {
-                          final canStart = examController.canStartExam(
-                            exam['exam_time'],
-                            exam['exam_end'],
+                if (examController.exams.isEmpty) {
+                  return buildSubjectCard(
+                    title: 'Subject of Exam:',
+                    canStart: false,
+                    onTap: () {},
+                    message: 'No exams available.',
+                  );
+                }
+
+                return Column(
+                  children: examController.exams.map((exam) {
+                    final canStart = examController.canStartExam(
+                      exam['exam_time'],
+                      exam['exam_end'],
+                    );
+
+                    return buildSubjectCard(
+                      title: exam['exam_title'],
+                      canStart: canStart,
+                      onTap: () {
+                        if (canStart) {
+                          Get.to(() => Testcard(
+                                examid: exam['exam_id'],
+                              ))?.then((_) {
+                            _refreshData();
+                          });
+                        } else {
+                          final startTime = DateFormat('hh:mm a').format(
+                            DateFormat('HH:mm').parse(exam['exam_time']),
+                          );
+                          final endTime = DateFormat('hh:mm a').format(
+                            DateFormat('HH:mm').parse(exam['exam_end']),
                           );
 
-                          return buildSubjectCard(
-                            title: exam['exam_title'],
-                            canStart: canStart,
-                            onTap: () {
-                              if (canStart) {
-                                Get.to(() => Testcard(
-                                      examid: exam['exam_id'],
-                                    ))?.then((_) {
-                                  _refreshData();
-                                });
-                              } else {
-                                final startTime = DateFormat('hh:mm a').format(
-                                  DateFormat('HH:mm').parse(exam['exam_time']),
-                                );
-                                final endTime = DateFormat('hh:mm a').format(
-                                  DateFormat('HH:mm').parse(exam['exam_end']),
-                                );
-
-                                Get.snackbar(
-                                  "Unavailable",
-                                  "Test is only available between $startTime and $endTime",
-                                  backgroundColor: Colors.red,
-                                  colorText: Colors.white,
-                                  snackPosition: SnackPosition.TOP,
-                                );
-                              }
-                            },
+                          Get.snackbar(
+                            "Unavailable",
+                            "Test is only available between $startTime and $endTime",
+                            backgroundColor: Colors.red,
+                            colorText: Colors.white,
+                            snackPosition: SnackPosition.TOP,
                           );
-                        }).toList(),
-                      );
-                    }),
-                    SizedBox(height: 10.r),
-                    Obx(() {
-                      // if (controller.isScheduleLoading.value) {
-                      //   return const Center(
-                      //       child: CircularProgressIndicator(
-                      //     color: kPrimaryColor,
-                      //   ));
-                      // }
-                      return buildExamScheduleCard(
-                        scheduleDate: controller.scheduleDate.value,
-                        subjects: controller.scheduleSubjects,
-                      );
-                    }),
-                    SizedBox(height: 20.r),
-                    Obx(() {
-                      // if (controller.isLastExamLoading.value) {
-                      //   return const Center(
-                      //       child: CircularProgressIndicator(
-                      //     color: kPrimaryColor,
-                      //   ));
-                      // }
-
-                      if (controller.hasLastExam.value) {
-                        return buildModelTestCard(
-                          title: "${controller.lastExamTitle.value} ",
-                          onViewResult: () {
-                            Get.to(() => ViewresultScreen(
-                                examId: controller.lastExamId.value));
-                          },
-                        );
-                      } else {
-                        return const SizedBox();
-                      }
-                    }),
-                  ]),
-            ),
+                        }
+                      },
+                    );
+                  }).toList(),
+                );
+              }),
+              SizedBox(height: 10.r),
+              Obx(() {
+                return buildExamScheduleCard(
+                  scheduleDate: controller.scheduleDate.value,
+                  subjects: controller.scheduleSubjects,
+                );
+              }),
+              SizedBox(height: 20.r),
+              Obx(() {
+                if (controller.hasLastExam.value) {
+                  return buildModelTestCard(
+                    title: "${controller.lastExamTitle.value} ",
+                    onViewResult: () {
+                      Get.to(() =>
+                          ViewresultScreen(examId: controller.lastExamId.value));
+                    },
+                  );
+                } else {
+                  return const SizedBox();
+                }
+              }),
+            ],
           ),
         ),
       ),
@@ -564,7 +545,7 @@ Widget buildSubjectCard({
                       ),
                       onPressed: onTap,
                       child: Text(
-                        'Start Test',
+                        'Start Exam',
                         style: AppTextStyles.small.withColor(whiteColor),
                       ),
                     )

@@ -137,7 +137,10 @@ class _ViewresultScreenState extends State<ViewresultScreen> {
                 width: 120.r,
                 child: Text(
                   "$label :",
-                  style: TextStyle(fontSize: 10.r, color: greyColor),
+                  style: TextStyle(
+                      fontSize: 12.r,
+                      color: darkGreyColor,
+                      fontWeight: FontWeight.bold),
                 ),
               ),
               Expanded(
@@ -145,7 +148,7 @@ class _ViewresultScreenState extends State<ViewresultScreen> {
                   value,
                   textAlign: TextAlign.end,
                   style: TextStyle(
-                    fontWeight: FontWeight.w300,
+                    fontWeight: FontWeight.w800,
                     fontSize: 12.r,
                   ),
                 ),

@@ -124,51 +124,56 @@ class _TestcardState extends State<Testcard> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                Card(
-                  elevation: 3,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  color: whiteColor,
-                  child: SizedBox(
+                linecontainer(
+                  SizedBox(
                     width: double.infinity,
-                    height: 100,
+                    // give more height if needed
+                    height: 150,
                     child: Padding(
                       padding: EdgeInsets.all(16.r),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Attended Questions:',
-                              style:
-                                  AppTextStyles.heading.withColor(blackColor)),
+                          Text(
+                            'Attended Questions:',
+                            style: AppTextStyles.heading.withColor(blackColor),
+                          ),
                           SizedBox(height: 10.r),
-                          Wrap(
-                            spacing: 10.r,
-                            runSpacing: 10.r,
-                            children: List.generate(
-                              testController.questions.length,
-                              (index) {
-                                final questId = testController.questions[index]
-                                        ['question_id']
-                                    .toString();
-                                final isAnswered = testController
-                                    .selectedAnswers
-                                    .containsKey(questId);
+                          Expanded(
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.vertical,
+                              child: Wrap(
+                                spacing: 10.r,
+                                runSpacing: 10.r,
+                                children: List.generate(
+                                  testController.questions.length,
+                                  (index) {
+                                    final questId = testController
+                                        .questions[index]['question_id']
+                                        .toString();
+                                    final isAnswered = testController
+                                        .selectedAnswers
+                                        .containsKey(questId);
 
-                                return Container(
-                                  width: 24.r,
-                                  height: 24.r,
-                                  decoration: BoxDecoration(
-                                    color:
-                                        isAnswered ? Colors.green : Colors.red,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Text('${index + 1}',
-                                      style: AppTextStyles.small
-                                          .withColor(whiteColor)),
-                                );
-                              },
+                                    return Container(
+                                      width: 24.r,
+                                      height: 24.r,
+                                      decoration: BoxDecoration(
+                                        color: isAnswered
+                                            ? Colors.green
+                                            : Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        '${index + 1}',
+                                        style: AppTextStyles.small
+                                            .withColor(whiteColor),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -178,130 +183,137 @@ class _TestcardState extends State<Testcard> {
                 ),
                 SizedBox(height: 10.r),
                 Expanded(
-                  child: linecontainer(
-                    Padding(
-                      padding: EdgeInsets.all(8.r),
-                      child: ListView.builder(
-                        itemCount: testController.questions.length + 1,
-                        itemBuilder: (context, index) {
-                          if (index == testController.questions.length) {
-                            return Center(
-                              child: ElevatedButton(
-                                onPressed: testController.isSubmitted.value
-                                    ? null
-                                    : () async {
-                                        final shouldSubmit =
-                                            await showDialog<bool>(
-                                          context: context,
-                                          builder: (context) => AlertDialog(
-                                            title: const Text("Submit Test?"),
-                                            content: const Text(
-                                              "Are you sure you want to submit the test? You cannot make changes afterward.",
+                  child: Padding(
+                    padding: EdgeInsets.all(4.r),
+                    child: linecontainer(
+                      Padding(
+                        padding: EdgeInsets.all(8.r),
+                        child: ListView.builder(
+                          itemCount: testController.questions.length + 1,
+                          itemBuilder: (context, index) {
+                            if (index == testController.questions.length) {
+                              return Center(
+                                child: ElevatedButton(
+                                  onPressed: testController.isSubmitted.value
+                                      ? null
+                                      : () async {
+                                          final shouldSubmit =
+                                              await showDialog<bool>(
+                                            context: context,
+                                            builder: (context) => AlertDialog(
+                                              title: const Text("Submit Test?"),
+                                              content: const Text(
+                                                "Are you sure you want to submit the test? You cannot make changes afterward.",
+                                              ),
+                                              actions: [
+                                                ElevatedButton(
+                                                  style:
+                                                      ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        Colors.grey[300],
+                                                    foregroundColor:
+                                                        Colors.black,
+                                                  ),
+                                                  onPressed: () =>
+                                                      Navigator.of(context)
+                                                          .pop(false),
+                                                  child: const Text("Cancel"),
+                                                ),
+                                                ElevatedButton(
+                                                  style:
+                                                      ElevatedButton.styleFrom(
+                                                    backgroundColor: Colors.red,
+                                                    foregroundColor:
+                                                        Colors.white,
+                                                  ),
+                                                  onPressed: () =>
+                                                      Navigator.of(context)
+                                                          .pop(true),
+                                                  child:
+                                                      const Text("Yes, Submit"),
+                                                ),
+                                              ],
                                             ),
-                                            actions: [
-                                              ElevatedButton(
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor:
-                                                      Colors.grey[300],
-                                                  foregroundColor: Colors.black,
-                                                ),
-                                                onPressed: () =>
-                                                    Navigator.of(context)
-                                                        .pop(false),
-                                                child: const Text("Cancel"),
-                                              ),
-                                              ElevatedButton(
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor: Colors.red,
-                                                  foregroundColor: Colors.white,
-                                                ),
-                                                onPressed: () =>
-                                                    Navigator.of(context)
-                                                        .pop(true),
-                                                child:
-                                                    const Text("Yes, Submit"),
-                                              ),
-                                            ],
-                                          ),
-                                        );
+                                          );
 
-                                        if (shouldSubmit == true) {
-                                          testController.handleSubmit();
-                                        }
-                                      },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: kPrimaryColor,
-                                  foregroundColor: Colors.white,
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 25.r, vertical: 16.r),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10.r),
+                                          if (shouldSubmit == true) {
+                                            testController.handleSubmit();
+                                          }
+                                        },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: kPrimaryColor,
+                                    foregroundColor: Colors.white,
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 25.r, vertical: 16.r),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10.r),
+                                    ),
                                   ),
+                                  child: const Text("Submit Test"),
                                 ),
-                                child: const Text("Submit Test"),
+                              );
+                            }
+
+                            final question = testController.questions[index];
+                            final questId = question['question_id'].toString();
+                            final questionText =
+                                "${index + 1}. ${question['question_name'] ?? ''}";
+
+                            final options = [
+                              question['option1'],
+                              question['option2'],
+                              question['option3'],
+                              question['option4'],
+                            ].whereType<String>().toList();
+
+                            return Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    questionText,
+                                    style: AppTextStyles.subHeading
+                                        .withColor(blackColor),
+                                  ),
+                                  SizedBox(height: 6.r),
+                                  ...options.map((option) {
+                                    final isSelected = testController
+                                            .selectedAnswers[questId] ==
+                                        option;
+                                    return RadioListTile<String>(
+                                      toggleable: true,
+                                      // 👇 removed ValueKey to avoid duplicate key errors
+                                      title: Text(option),
+                                      value: option,
+                                      groupValue: testController
+                                          .selectedAnswers[questId],
+                                      onChanged: testController
+                                              .isSubmitted.value
+                                          ? null
+                                          : (value) {
+                                              if (value == null) {
+                                                testController.selectedAnswers
+                                                    .remove(questId);
+                                              } else {
+                                                testController.selectedAnswers[
+                                                    questId] = value;
+                                              }
+                                              testController.update();
+                                            },
+                                      contentPadding: EdgeInsets.zero,
+                                      dense: true,
+                                    );
+                                  }).toList(),
+                                ],
                               ),
                             );
-                          }
-
-                          final question = testController.questions[index];
-                          final questId = question['question_id'].toString();
-                          final questionText =
-                              "${index + 1}. ${question['question_name'] ?? ''}";
-
-                          final options = [
-                            question['option1'],
-                            question['option2'],
-                            question['option3'],
-                            question['option4'],
-                          ].whereType<String>().toList();
-
-                          return Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  questionText,
-                                  style: AppTextStyles.subHeading
-                                      .withColor(blackColor),
-                                ),
-                                SizedBox(height: 6.r),
-                                ...options.map((option) {
-                                  final isSelected =
-                                      testController.selectedAnswers[questId] ==
-                                          option;
-                                  return RadioListTile<String>(
-                                    toggleable: true,
-                                    key: ValueKey(
-                                        'q${questId}_${option}_$isSelected'),
-                                    title: Text(option),
-                                    value: option,
-                                    groupValue:
-                                        testController.selectedAnswers[questId],
-                                    onChanged: testController.isSubmitted.value
-                                        ? null
-                                        : (value) {
-                                            if (value == null) {
-                                              testController.selectedAnswers
-                                                  .remove(questId);
-                                            } else {
-                                              testController.selectedAnswers[
-                                                  questId] = value;
-                                            }
-                                            testController.update();
-                                          },
-                                    contentPadding: EdgeInsets.zero,
-                                    dense: true,
-                                  );
-                                }).toList(),
-                              ],
-                            ),
-                          );
-                        },
+                          },
+                        ),
                       ),
                     ),
                   ),
-                )
+                ),
               ],
             ),
           ),

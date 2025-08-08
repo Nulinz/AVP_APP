@@ -94,13 +94,15 @@ class Testcardcontroller extends GetxController {
       "button_type": "submit_answers",
       "exam_id": examId.toString(),
       "enrollment_no": storedEnrollmentNo,
-      "answers": selectedAnswers.entries.map((e) {
+      "answers": questions.map((q) {
+        final id = q['question_id'].toString();
         return {
-          "quest_id": e.key.toString(),
-          "answer": e.value.toString(),
+          "quest_id": id,
+          "answer": selectedAnswers[id] ?? "",
         };
       }).toList(),
     };
+    print("Selected Answers: $selectedAnswers");
 
     print("PAYLOAD : $payload");
 
