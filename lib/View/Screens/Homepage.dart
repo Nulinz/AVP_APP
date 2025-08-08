@@ -312,12 +312,16 @@ class _CurriculumDashboardState extends State<CurriculumDashboard> {
               SizedBox(height: 20.r),
               Obx(() {
                 if (controller.hasLastExam.value) {
-                  return buildModelTestCard(
-                    title: "${controller.lastExamTitle.value} ",
-                    onViewResult: () {
-                      Get.to(() =>
-                          ViewresultScreen(examId: controller.lastExamId.value));
-                    },
+                  return Column(
+                    children: controller.lastExams.map((exam) {
+                      return buildModelTestCard(
+                        title: exam['exam_title'] ?? '',
+                        onViewResult: () {
+                          Get.to(
+                              () => ViewresultScreen(examId: exam['exam_id']));
+                        },
+                      );
+                    }).toList(),
                   );
                 } else {
                   return const SizedBox();

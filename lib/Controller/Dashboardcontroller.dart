@@ -133,6 +133,8 @@ class DashboardController extends GetxController {
   RxBool isLoading = false.obs;
 
   var enrollmentNo = "".obs;
+  var lastExams = <Map<String, dynamic>>[].obs;
+ 
   // 👇 Add this new observable for notification
 
   Future<void> fetchScheduleForToday() async {
@@ -218,8 +220,7 @@ class DashboardController extends GetxController {
 
     return notificationList;
   }
-
-  void loadLastExam() async {
+void loadLastExam() async {
     isLastExamLoading.value = true;
 
     try {
@@ -237,21 +238,21 @@ class DashboardController extends GetxController {
       print("response data $response");
 
       if (response['status'] == "success" && response['data'].isNotEmpty) {
-        final item = response['data'][0];
-        lastExamTitle.value = item['exam_title'] ?? '';
-        lastExamId.value = item['exam_id'] ?? 0;
-        lastExamDate.value = item['0']?.toString().replaceAll('-', '.') ?? '';
+        lastExams.assignAll(List<Map<String, dynamic>>.from(response['data']));
         hasLastExam.value = true;
       } else {
         hasLastExam.value = false;
+        lastExams.clear();
       }
     } catch (e) {
       print("Error loading last exam: $e");
       hasLastExam.value = false;
+      lastExams.clear();
     } finally {
       isLastExamLoading.value = false;
     }
   }
+
 
   var marqueeText = ''.obs;
   var isLoadingMarquee = false.obs;
