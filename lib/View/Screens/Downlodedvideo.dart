@@ -5,13 +5,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
-import 'package:sakthiexports/Theme/Colors.dart';
-import 'package:sakthiexports/View/widgets/Shimmer.dart';
+import 'package:avpsiddhacademy/Theme/Colors.dart';
+import 'package:avpsiddhacademy/View/widgets/Shimmer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
-import 'package:sakthiexports/Controller/Videocontroller.dart';
-import 'package:sakthiexports/Theme/Fonts.dart';
+import 'package:avpsiddhacademy/Controller/Videocontroller.dart';
+import 'package:avpsiddhacademy/Theme/Fonts.dart';
 import 'VideoPlayerfullscreen.dart';
 import '../util/linecontainer.dart';
 

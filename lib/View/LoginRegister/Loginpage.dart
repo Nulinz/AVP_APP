@@ -4,8 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
-import 'package:sakthiexports/Components/Formfield.dart';
-import 'package:sakthiexports/Theme/Colors.dart';
+import 'package:avpsiddhacademy/Components/Formfield.dart';
+import 'package:avpsiddhacademy/Theme/Colors.dart';
 import '../../Controller/Logincontroller.dart';
 
 class LoginPage extends StatefulWidget {

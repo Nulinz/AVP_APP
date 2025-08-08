@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import 'package:sakthiexports/Backendservice/BackendService.dart';
-import 'package:sakthiexports/Backendservice/connectionService.dart';
+import 'package:avpsiddhacademy/Backendservice/BackendService.dart';
+import 'package:avpsiddhacademy/Backendservice/connectionService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationController extends GetxController {

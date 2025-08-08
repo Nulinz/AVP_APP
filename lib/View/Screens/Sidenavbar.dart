@@ -4,9 +4,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:sakthiexports/Theme/Colors.dart';
-import 'package:sakthiexports/Theme/Fonts.dart';
-import 'package:sakthiexports/View/LoginRegister/Loginpage.dart';
+import 'package:avpsiddhacademy/Theme/Colors.dart';
+import 'package:avpsiddhacademy/Theme/Fonts.dart';
+import 'package:avpsiddhacademy/View/LoginRegister/Loginpage.dart';
 import 'Downlodedvideo.dart';
 import 'Homepage.dart';
 import 'Profile.dart';

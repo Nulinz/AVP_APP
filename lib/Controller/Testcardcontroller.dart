@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:get/get.dart';
-import 'package:sakthiexports/Components/Snackbars.dart';
+import 'package:avpsiddhacademy/Components/Snackbars.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../Backendservice/BackendService.dart';
 import '../Backendservice/connectionService.dart';

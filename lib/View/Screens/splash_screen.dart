@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:sakthiexports/View/LoginRegister/Loginpage.dart';
-import 'package:sakthiexports/View/Screens/Homepage.dart';
-import 'package:sakthiexports/View/util/AccessDenied.dart';
+import 'package:avpsiddhacademy/View/LoginRegister/Loginpage.dart';
+import 'package:avpsiddhacademy/View/Screens/Homepage.dart';
+import 'package:avpsiddhacademy/View/util/AccessDenied.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import '../../Backendservice/BackendService.dart';
@@ -50,7 +50,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
         SharedPreferences prefs = await SharedPreferences.getInstance();
 
-        if (response['version'] != '0.0.1') {
+        if (response['version'] != '2.0.0') {
           print("Version outdated. Redirecting to Update screen.");
           await prefs.remove('enrollment_no');
           Get.offAll(() => const Updatepopup());

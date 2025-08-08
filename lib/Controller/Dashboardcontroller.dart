@@ -56,8 +56,8 @@
 // DashboardController.dart
 
 // import 'package:get/get.dart';
-// import 'package:sakthiexports/Backendservice/BackendService.dart';
-// import 'package:sakthiexports/Backendservice/ConnectionService.dart';
+// import 'package:avpsiddhacademy/Backendservice/BackendService.dart';
+// import 'package:avpsiddhacademy/Backendservice/ConnectionService.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
 
 // class DashboardController extends GetxController {
@@ -115,8 +115,8 @@
 // }
 
 import 'package:get/get.dart';
-import 'package:sakthiexports/Backendservice/BackendService.dart';
-import 'package:sakthiexports/Backendservice/ConnectionService.dart';
+import 'package:avpsiddhacademy/Backendservice/BackendService.dart';
+import 'package:avpsiddhacademy/Backendservice/ConnectionService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardController extends GetxController {
@@ -134,7 +134,7 @@ class DashboardController extends GetxController {
 
   var enrollmentNo = "".obs;
   var lastExams = <Map<String, dynamic>>[].obs;
- 
+
   // 👇 Add this new observable for notification
 
   Future<void> fetchScheduleForToday() async {
@@ -220,7 +220,8 @@ class DashboardController extends GetxController {
 
     return notificationList;
   }
-void loadLastExam() async {
+
+  void loadLastExam() async {
     isLastExamLoading.value = true;
 
     try {
@@ -252,7 +253,6 @@ void loadLastExam() async {
       isLastExamLoading.value = false;
     }
   }
-
 
   var marqueeText = ''.obs;
   var isLoadingMarquee = false.obs;

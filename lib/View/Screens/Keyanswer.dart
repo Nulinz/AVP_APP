@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:sakthiexports/Controller/KeyAnswerController.dart';
-import 'package:sakthiexports/View/util/linecontainer.dart';
+import 'package:avpsiddhacademy/Controller/KeyAnswerController.dart';
+import 'package:avpsiddhacademy/View/util/linecontainer.dart';
 import 'Sidenavbar.dart';
 
 class Keyanswer extends StatefulWidget {

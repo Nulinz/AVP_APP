@@ -8,7 +8,7 @@
 // import 'package:get/get.dart';
 // import 'package:google_fonts/google_fonts.dart';
 // import 'package:permission_handler/permission_handler.dart';
-// import 'package:sakthiexports/view/Dashboard/Notify.dart';
+// import 'package:avpsiddhacademy/view/Dashboard/Notify.dart';
 // // import 'package:sitesync/View/Screens/Notification.dart';
 
 // class NotificationServices {

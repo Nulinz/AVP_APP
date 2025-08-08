@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:sakthiexports/Theme/Fonts.dart';
+import 'package:avpsiddhacademy/Theme/Fonts.dart';
 
 class ErrorScreen extends StatelessWidget {
   final String errorMessage;

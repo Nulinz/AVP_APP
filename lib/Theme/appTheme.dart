@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:sakthiexports/Theme/Fonts.dart';
+import 'package:avpsiddhacademy/Theme/Fonts.dart';
 import 'Colors.dart';
 
 class AppTheme {

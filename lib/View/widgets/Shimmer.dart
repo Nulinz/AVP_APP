@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:sakthiexports/View/util/linecontainer.dart';
+import 'package:avpsiddhacademy/View/util/linecontainer.dart';
 
 class Shimmerload extends StatelessWidget {
   const Shimmerload({super.key});

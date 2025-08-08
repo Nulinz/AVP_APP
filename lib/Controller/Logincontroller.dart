@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sakthiexports/Backendservice/BackendService.dart';
-import 'package:sakthiexports/Backendservice/connectionService.dart';
-import 'package:sakthiexports/Components/Snackbars.dart';
-import 'package:sakthiexports/View/Screens/Homepage.dart';
+import 'package:avpsiddhacademy/Backendservice/BackendService.dart';
+import 'package:avpsiddhacademy/Backendservice/connectionService.dart';
+import 'package:avpsiddhacademy/Components/Snackbars.dart';
+import 'package:avpsiddhacademy/View/Screens/Homepage.dart';
 
 class Logincontroller extends GetxController {
   final phonecontroller = TextEditingController();

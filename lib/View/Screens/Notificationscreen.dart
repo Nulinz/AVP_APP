@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:sakthiexports/Controller/NotificationController.dart';
-import 'package:sakthiexports/Theme/Colors.dart';
-import 'package:sakthiexports/View/util/linecontainer.dart';
+import 'package:avpsiddhacademy/Controller/NotificationController.dart';
+import 'package:avpsiddhacademy/Theme/Colors.dart';
+import 'package:avpsiddhacademy/View/util/linecontainer.dart';
 import '../../Theme/Fonts.dart';
 import 'Sidenavbar.dart';
 

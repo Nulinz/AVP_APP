@@ -41,7 +41,9 @@ class _UpdatepopupState extends State<Updatepopup> {
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 20),
-                            child: Image.asset("assets/images/logo.png"),
+                            child: Image.asset(
+                              "assets/images/logo.png",
+                            ),
                           )),
                       Container(
                         width: Get.width / 1.329,

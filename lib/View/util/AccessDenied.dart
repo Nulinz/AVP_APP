@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:sakthiexports/View/LoginRegister/Loginpage.dart';
+import 'package:avpsiddhacademy/View/LoginRegister/Loginpage.dart';
 
 import '../../Theme/Colors.dart';
 import '../../Theme/Fonts.dart';
@@ -38,7 +38,6 @@ class AccessDeniedScreen extends StatelessWidget {
               ),
               const SizedBox(height: 30),
               SizedBox(
-                
                 width: double.infinity,
                 height: 50.r,
                 child: ElevatedButton(

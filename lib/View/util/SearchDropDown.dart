@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:sakthiexports/Theme/Fonts.dart';
+import 'package:avpsiddhacademy/Theme/Fonts.dart';
 
 class SearchDropdownInput extends StatefulWidget {
   final String hintText, validatorText;
@@ -73,14 +73,16 @@ class _SearchDropdownInputState extends State<SearchDropdownInput> {
                       controller: searchController,
                       decoration: InputDecoration(
                         hintText: "Search...",
-                        prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                        prefixIcon:
+                            const Icon(Icons.search, color: Colors.grey),
                         filled: true,
                         fillColor: Colors.grey[100],
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide.none,
                         ),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                        contentPadding:
+                            const EdgeInsets.symmetric(vertical: 12),
                       ),
                       onChanged: (query) {
                         setStateModal(() {

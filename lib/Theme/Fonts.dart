@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:sakthiexports/Theme/Colors.dart';
+import 'package:avpsiddhacademy/Theme/Colors.dart';
 
 class AppTextStyles {
   // NotoSans Font Styles (Arial alternative)
