@@ -140,7 +140,10 @@ class _KeyanswerState extends State<Keyanswer> {
                 width: 100.r,
                 child: Text(
                   "$label :",
-                  style: TextStyle(fontSize: 10.r, color: Colors.grey),
+                  style: TextStyle(
+                      fontSize: 10.r,
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold),
                 ),
               ),
               Expanded(

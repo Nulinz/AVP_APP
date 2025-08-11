@@ -45,6 +45,7 @@ class Testcardcontroller extends GetxController {
       };
 
       print("Sending request: $requestData");
+      
 
       final response = await Backendservice.function(
         requestData,
